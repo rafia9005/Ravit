@@ -192,12 +192,33 @@ func (h *UserHandler) GetCurrentUser(c echo.Context) error {
 	return h.r.SuccessResponse(c, response.FromEntity(user), "User retrieved successfully")
 }
 
+// GetUserProfile gets a user profile by username
+func (h *UserHandler) GetUserProfile(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	username := c.Param("username")
+	if username == "" {
+		return h.r.BadRequestResponse(c, "Username is required")
+	}
+
+	user, err := h.userService.GetUserByUsername(ctx, username)
+	if err != nil {
+		if err == service.ErrUserNotFound {
+			return h.r.NotFoundResponse(c, "User not found")
+		}
+		return h.r.InternalServerErrorResponse(c, "Failed to get user profile")
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntity(user), "User profile retrieved successfully")
+}
+
 // RegisterRoutes registers the user routes
 func (h *UserHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	group := e.Group(basePath + "/users")
 
 	// Public routes (no auth required)
 	group.POST("", h.CreateUser)
+	group.GET("/:username/profile", h.GetUserProfile)
 
 	// Protected routes (auth required)
 	authGroup := e.Group(basePath + "/users")

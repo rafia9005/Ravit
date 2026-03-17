@@ -6,7 +6,13 @@ import (
 	"Ravit/internal/pkg/logger"
 	"Ravit/internal/pkg/middleware"
 	"Ravit/modules/auth"
+	"Ravit/modules/bookmarks"
+	"Ravit/modules/comment"
+	"Ravit/modules/explore"
+	"Ravit/modules/notification"
 	"Ravit/modules/oauth"
+	"Ravit/modules/post"
+	"Ravit/modules/reply"
 	user "Ravit/modules/users"
 	"flag"
 	"log"
@@ -47,6 +53,12 @@ func main() {
 	app.RegisterModule(user.NewModule())
 	app.RegisterModule(auth.NewModule())
 	app.RegisterModule(oauth.NewModule())
+	app.RegisterModule(post.NewModule())
+	app.RegisterModule(comment.NewModule())
+	app.RegisterModule(reply.NewModule())
+	app.RegisterModule(explore.NewModule())
+	app.RegisterModule(notification.NewModule())
+	app.RegisterModule(bookmarks.NewModule())
 
 	// initialize the application
 	if err := app.Initialize(); err != nil {

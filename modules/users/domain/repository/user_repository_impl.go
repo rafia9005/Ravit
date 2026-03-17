@@ -57,6 +57,19 @@ func (r UserRepositoryImpl) FindByID(ctx context.Context, id uint) (*entity.User
 	return &user, nil
 }
 
+// FindByUsername implements UserRepository.
+func (r UserRepositoryImpl) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
+	var user entity.User
+	result := database.DB.WithContext(ctx).Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		if result.RowsAffected == 0 {
+			return nil, ERR_RECORD_NOT_FOUND
+		}
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 // Update implements UserRepository.
 func (r UserRepositoryImpl) Update(ctx context.Context, user *entity.User) error {
 	return database.DB.WithContext(ctx).Save(user).Error

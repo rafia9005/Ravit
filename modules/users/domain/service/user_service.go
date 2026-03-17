@@ -42,6 +42,18 @@ func (s *UserService) GetUserByID(ctx context.Context, id uint) (*entity.User, e
 	return user, nil
 }
 
+// GetUserByUsername gets a user by username
+func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+	user, err := s.userRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
+}
+
 // CreateUser creates a new user
 func (s *UserService) CreateUser(ctx context.Context, user *entity.User) error {
 	// existingUser, err := s.userRepo.FindByEmail(ctx, user.Email)
