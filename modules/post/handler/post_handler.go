@@ -386,6 +386,62 @@ func (h *PostHandler) UploadVideos(c echo.Context) error {
 	return h.r.SuccessResponse(c, map[string]interface{}{"media_urls": uploadedURLs}, "Videos uploaded successfully")
 }
 
+// GetUserPosts gets posts by a specific user
+func (h *PostHandler) GetUserPosts(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	userID, err := strconv.ParseUint(c.Param("userId"), 10, 32)
+	if err != nil {
+		return h.r.BadRequestResponse(c, "Invalid user ID")
+	}
+
+	// Parse pagination params
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	offset, _ := strconv.Atoi(c.QueryParam("offset"))
+
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	posts, err := h.postService.GetUserPosts(ctx, uint(userID), limit, offset)
+	if err != nil {
+		return h.r.InternalServerErrorResponse(c, "Failed to get user posts")
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntities(posts), "User posts retrieved successfully")
+}
+
+// GetUserLikes gets posts liked by a specific user
+func (h *PostHandler) GetUserLikes(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	userID, err := strconv.ParseUint(c.Param("userId"), 10, 32)
+	if err != nil {
+		return h.r.BadRequestResponse(c, "Invalid user ID")
+	}
+
+	// Parse pagination params
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	offset, _ := strconv.Atoi(c.QueryParam("offset"))
+
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	posts, err := h.postService.GetUserLikedPosts(ctx, uint(userID), limit, offset)
+	if err != nil {
+		return h.r.InternalServerErrorResponse(c, "Failed to get user likes")
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntities(posts), "User likes retrieved successfully")
+}
+
 // RegisterRoutes registers the post routes
 func (h *PostHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	// Public routes (no auth required)
@@ -412,4 +468,10 @@ func (h *PostHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	// Media uploads
 	authGroup.POST("/media/upload-images", h.UploadImages)
 	authGroup.POST("/media/upload-videos", h.UploadVideos)
+
+	// User routes for posts (under /users prefix but handled by post handler)
+	userGroup := e.Group(basePath + "/users")
+	userGroup.Use(middleware.Auth)
+	userGroup.GET("/:userId/posts", h.GetUserPosts)
+	userGroup.GET("/:userId/likes", h.GetUserLikes)
 }
