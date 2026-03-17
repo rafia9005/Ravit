@@ -38,6 +38,46 @@ func (s *PostService) GetPost(ctx context.Context, id uint) (*entity.Post, error
 	return post, nil
 }
 
+// GetUserPosts gets posts by a specific user
+func (s *PostService) GetUserPosts(ctx context.Context, userID uint, limit, offset int) ([]*entity.Post, error) {
+	return s.postRepo.FindByUserID(ctx, userID, limit, offset)
+}
+
+// GetUserLikedPosts gets posts liked by a specific user
+func (s *PostService) GetUserLikedPosts(ctx context.Context, userID uint, limit, offset int) ([]*entity.Post, error) {
+	// Get likes by user
+	likes, err := s.likeRepo.FindByUserID(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(likes) == 0 {
+		return []*entity.Post{}, nil
+	}
+
+	// Get post IDs from likes
+	postIDs := make([]uint, len(likes))
+	for i, like := range likes {
+		postIDs[i] = like.PostID
+	}
+
+	// Fetch posts by IDs (we need to maintain the order from likes)
+	posts := make([]*entity.Post, 0, len(postIDs))
+	for _, postID := range postIDs {
+		post, err := s.postRepo.FindByID(ctx, postID)
+		if err == nil && post != nil {
+			posts = append(posts, post)
+		}
+	}
+
+	return posts, nil
+}
+
+// GetLikeStatusForPosts checks like status for multiple posts
+func (s *PostService) GetLikeStatusForPosts(ctx context.Context, userID uint, postIDs []uint) (map[uint]bool, error) {
+	return s.likeRepo.HasUserLikedMultiple(ctx, userID, postIDs)
+}
+
 func (s *PostService) CreatePost(ctx context.Context, post *entity.Post) error {
 	return s.postRepo.Create(ctx, post)
 }
@@ -125,4 +165,9 @@ func (s *PostService) UnlikePost(ctx context.Context, userID, postID uint) error
 // IncrementViewCount increments view count
 func (s *PostService) IncrementViewCount(ctx context.Context, postID uint) error {
 	return s.postRepo.IncrementViewCount(ctx, postID)
+}
+
+// HasUserLiked checks if user has liked a post
+func (s *PostService) HasUserLiked(ctx context.Context, userID, postID uint) (bool, error) {
+	return s.likeRepo.HasUserLiked(ctx, userID, postID)
 }
