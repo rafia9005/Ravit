@@ -4,10 +4,13 @@ import type { LoginInput, RegisterInput } from "../validations/auth";
 export interface AuthUser {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: string;
   bio: string;
   avatar: string;
+  banner: string;
+  auth_type: string;
   created_at: string;
   updated_at: string;
 }
