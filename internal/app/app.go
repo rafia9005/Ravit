@@ -133,8 +133,8 @@ func (a *App) Initialize() error {
 	version := fmt.Sprintf("/api/v%s", config.GetString("API_VERSION"))
 
 	// Serve static files from public directory
-	a.r.Static("/media", "./public/media")
-	a.logger.Info("Static file serving enabled for /media")
+	a.r.Static("/public", "./public")
+	a.logger.Info("Static file serving enabled for /public")
 
 	// Register routes for all modules
 	for _, module := range a.modules {
