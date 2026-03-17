@@ -3,6 +3,7 @@ package post
 import (
 	"Ravit/internal/pkg/bus"
 	"Ravit/internal/pkg/logger"
+	"Ravit/internal/pkg/media"
 	"Ravit/modules/post/domain/entity"
 	"Ravit/modules/post/domain/repository"
 	"Ravit/modules/post/domain/service"
@@ -43,8 +44,12 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 	m.postService = service.NewPostService(postRepo, likeRepo)
 	m.logger.Debug("Post service initialized")
 
+	// Initialize media uploader
+	mediaUploader := media.NewMediaUploader("./public")
+	m.logger.Debug("Media uploader initialized")
+
 	// Initialize handlers
-	m.postHandler = handler.NewPostHandler(m.logger, m.event, m.postService)
+	m.postHandler = handler.NewPostHandler(m.logger, m.event, m.postService, mediaUploader)
 	m.logger.Debug("Post handler initialized")
 
 	m.logger.Info("Post module initialized successfully")

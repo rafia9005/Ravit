@@ -3,12 +3,14 @@ package handler
 import (
 	"Ravit/internal/pkg/bus"
 	"Ravit/internal/pkg/logger"
+	"Ravit/internal/pkg/media"
 	"Ravit/internal/pkg/middleware"
 	"Ravit/internal/pkg/utils"
 	"Ravit/modules/post/domain/entity"
 	"Ravit/modules/post/domain/service"
 	"Ravit/modules/post/dto/request"
 	"Ravit/modules/post/dto/response"
+	"encoding/json"
 	"strconv"
 
 	"github.com/labstack/echo"
@@ -16,19 +18,21 @@ import (
 
 // PostHandler handles HTTP requests for posts
 type PostHandler struct {
-	postService *service.PostService
-	log         *logger.Logger
-	event       *bus.EventBus
-	r           *utils.Response
+	postService   *service.PostService
+	log           *logger.Logger
+	event         *bus.EventBus
+	r             *utils.Response
+	mediaUploader *media.MediaUploader
 }
 
 // NewPostHandler creates a new post handler
-func NewPostHandler(log *logger.Logger, event *bus.EventBus, postService *service.PostService) *PostHandler {
+func NewPostHandler(log *logger.Logger, event *bus.EventBus, postService *service.PostService, mediaUploader *media.MediaUploader) *PostHandler {
 	return &PostHandler{
-		postService: postService,
-		log:         log,
-		event:       event,
-		r:           &utils.Response{},
+		postService:   postService,
+		log:           log,
+		event:         event,
+		r:             &utils.Response{},
+		mediaUploader: mediaUploader,
 	}
 }
 
@@ -115,8 +119,11 @@ func (h *PostHandler) CreatePost(c echo.Context) error {
 
 	// Set media URLs if provided
 	if len(req.MediaURLs) > 0 {
-		// TODO: Convert []string to JSON string
-		// post.MediaURLs = convertToJSON(req.MediaURLs)
+		// Convert []string to JSON string
+		mediaJSON, err := json.Marshal(req.MediaURLs)
+		if err == nil {
+			post.MediaURLs = string(mediaJSON)
+		}
 	}
 
 	err := h.postService.CreatePost(ctx, post)
@@ -301,6 +308,84 @@ func (h *PostHandler) GetReplies(c echo.Context) error {
 	return h.r.SuccessResponse(c, response.FromEntities(replies), "Replies retrieved successfully")
 }
 
+// UploadImages uploads images for a post
+func (h *PostHandler) UploadImages(c echo.Context) error {
+	// Get user ID from context
+	_, ok := c.Get("user_id").(uint)
+	if !ok {
+		return h.r.UnauthorizedResponse(c, "Unauthorized")
+	}
+
+	// Parse multipart form with max 50MB
+	if err := c.Request().ParseMultipartForm(50 * 1024 * 1024); err != nil {
+		return h.r.BadRequestResponse(c, "Failed to parse multipart form")
+	}
+
+	files := c.Request().MultipartForm.File["images"]
+	if len(files) == 0 {
+		return h.r.BadRequestResponse(c, "No images provided")
+	}
+
+	// Validate image count (max 10)
+	if len(files) > 10 {
+		return h.r.BadRequestResponse(c, "Maximum 10 images allowed per upload")
+	}
+
+	// Upload images
+	var uploadedURLs []string
+	for _, file := range files {
+		// Upload image
+		url, err := h.mediaUploader.UploadImage(file)
+		if err != nil {
+			h.log.Error("Failed to upload image", err)
+			return h.r.BadRequestResponse(c, "Failed to upload image: "+err.Error())
+		}
+
+		uploadedURLs = append(uploadedURLs, url)
+	}
+
+	return h.r.SuccessResponse(c, map[string]interface{}{"media_urls": uploadedURLs}, "Images uploaded successfully")
+}
+
+// UploadVideos uploads videos for a post
+func (h *PostHandler) UploadVideos(c echo.Context) error {
+	// Get user ID from context
+	_, ok := c.Get("user_id").(uint)
+	if !ok {
+		return h.r.UnauthorizedResponse(c, "Unauthorized")
+	}
+
+	// Parse multipart form with max 500MB
+	if err := c.Request().ParseMultipartForm(500 * 1024 * 1024); err != nil {
+		return h.r.BadRequestResponse(c, "Failed to parse multipart form")
+	}
+
+	files := c.Request().MultipartForm.File["videos"]
+	if len(files) == 0 {
+		return h.r.BadRequestResponse(c, "No videos provided")
+	}
+
+	// Validate video count (max 5)
+	if len(files) > 5 {
+		return h.r.BadRequestResponse(c, "Maximum 5 videos allowed per upload")
+	}
+
+	// Upload videos
+	var uploadedURLs []string
+	for _, file := range files {
+		// Upload video
+		url, err := h.mediaUploader.UploadVideo(file)
+		if err != nil {
+			h.log.Error("Failed to upload video", err)
+			return h.r.BadRequestResponse(c, "Failed to upload video: "+err.Error())
+		}
+
+		uploadedURLs = append(uploadedURLs, url)
+	}
+
+	return h.r.SuccessResponse(c, map[string]interface{}{"media_urls": uploadedURLs}, "Videos uploaded successfully")
+}
+
 // RegisterRoutes registers the post routes
 func (h *PostHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	// Public routes (no auth required)
@@ -323,4 +408,8 @@ func (h *PostHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	// Likes
 	authGroup.POST("/:id/like", h.LikePost)
 	authGroup.DELETE("/:id/like", h.UnlikePost)
+
+	// Media uploads
+	authGroup.POST("/media/upload-images", h.UploadImages)
+	authGroup.POST("/media/upload-videos", h.UploadVideos)
 }
