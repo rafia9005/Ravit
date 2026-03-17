@@ -1,5 +1,5 @@
 export const system = {
-	shortName: "Pustaka Karya",
-	description: "Platform Penerbit",
-	name: "Pustaka Karya - Platform Penerbit",
+	shortName: "Ravit",
+	description: "Ravit social media platform for developer.",
+	name: "Ravit - Social Media Platform for Developers",
 };

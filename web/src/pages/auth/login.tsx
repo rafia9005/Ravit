@@ -89,24 +89,24 @@ export default function Login() {
    return (
     <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-         {/* Header */}
-         <div className="mb-8 flex flex-col items-center justify-center text-center">
-           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-4xl">
-             Selamat Kembali
-           </h1>
-           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-             Masuk untuk melanjutkan perjalanan penulisan Anda
-           </p>
-         </div>
+        {/* Header */}
+          <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-4xl">
+              Welcome Back
+            </h1>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Login to continue your Ravit journey
+            </p>
+          </div>
 
-         {/* Card */}
-         <Card className="border-zinc-200 shadow-lg dark:border-zinc-800">
-            <CardHeader className="space-y-2 pb-4 text-center">
-              <CardTitle className="text-2xl">Masuk</CardTitle>
-              <CardDescription className="text-center">
-                Masukkan email dan kata sandi Anda untuk mengakses akun
-              </CardDescription>
-            </CardHeader>
+          {/* Card */}
+          <Card className="border-zinc-200 shadow-lg dark:border-zinc-800">
+             <CardHeader className="space-y-2 pb-4 text-center">
+               <CardTitle className="text-2xl">Login</CardTitle>
+               <CardDescription className="text-center">
+                 Enter your email and password to access your account
+               </CardDescription>
+             </CardHeader>
             <CardContent className="space-y-6 pb-6">
                 {successMessage && (
                   <div className="flex items-start gap-3 rounded-lg bg-green-50 p-3 dark:bg-green-950">
@@ -122,9 +122,9 @@ export default function Login() {
                  <div className="flex items-start gap-3 rounded-lg bg-red-50 p-3 dark:bg-red-950">
                    <LucideAlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
                    <div className="flex-1">
-                     <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                        {authError || oauthError || urlError || "Silakan periksa kesalahan di bawah"}
-                      </p>
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                         {authError || oauthError || urlError || "Please check the errors below"}
+                       </p>
                      {Object.entries(errors).map(([field, message]) => (
                        <p key={field} className="text-xs text-red-700 dark:text-red-300 mt-1">
                          {message}
@@ -156,25 +156,25 @@ export default function Login() {
                  )}
                </div>
 
-               {/* Password Field */}
-               <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      Kata Sandi
-                    </Label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                    >
-                      Lupa kata sandi?
-                    </Link>
-                  </div>
-                 <div className="relative">
-                   <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Masukkan kata sandi Anda"
+                {/* Password Field */}
+                <div className="space-y-2">
+                   <div className="flex items-center justify-between">
+                     <Label htmlFor="password" className="text-sm font-medium">
+                       Password
+                     </Label>
+                     <Link
+                       to="/forgot-password"
+                       className="text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                     >
+                       Forgot password?
+                     </Link>
+                   </div>
+                  <div className="relative">
+                    <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                     <Input 
+                       id="password" 
+                       type="password" 
+                       placeholder="Enter your password"
                      className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
                      value={formData.password}
                      onChange={handleChange}
@@ -194,27 +194,27 @@ export default function Login() {
                   size="lg"
                 >
                    {isSubmitting || isLoading ? (
-                     <>
-                       <LucideLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                       Sedang masuk...
-                     </>
-                   ) : (
-                     "Masuk"
-                   )}
+                      <>
+                        <LucideLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
                 </Button>
              </form>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                 <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
-                   Atau lanjutkan dengan
-                 </span>
+             {/* Divider */}
+             <div className="relative">
+               <div className="absolute inset-0 flex items-center">
+                 <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
                </div>
-            </div>
+               <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
+                    Or continue with
+                  </span>
+                </div>
+             </div>
 
             {/* Social Buttons */}
              <div className="grid grid-cols-2 gap-3">
@@ -260,34 +260,34 @@ export default function Login() {
             </div>
           </CardContent>
 
-          {/* Footer */}
-           <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-200 dark:border-zinc-800 pt-4">
-             <p className="flex items-center justify-center gap-1 text-sm">
-               <span className="text-zinc-600 dark:text-zinc-400">
-                 Belum memiliki akun?
-               </span>
-               <Link
-                 to="/register"
-                 className="font-semibold text-zinc-900 hover:underline dark:text-zinc-50"
-               >
-                 Daftar
-               </Link>
-             </p>
-           </CardFooter>
+           {/* Footer */}
+            <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <p className="flex items-center justify-center gap-1 text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">
+                  Don't have an account?
+                </span>
+                <Link
+                  to="/register"
+                  className="font-semibold text-zinc-900 hover:underline dark:text-zinc-50"
+                >
+                  Register
+                </Link>
+              </p>
+            </CardFooter>
         </Card>
 
-         {/* Terms */}
-         <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-           Dengan melanjutkan, Anda setuju dengan{" "}
-           <Link to="/terms" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-             Syarat Layanan
-           </Link>{" "}
-           dan{" "}
-           <Link to="/privacy" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-             Kebijakan Privasi
-           </Link>
-           .
-         </p>
+          {/* Terms */}
+          <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
+            By continuing, you agree to our{" "}
+            <Link to="/terms" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
+              Privacy Policy
+            </Link>
+            .
+          </p>
       </div>
     </div>
   );

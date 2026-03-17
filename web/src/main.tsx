@@ -11,8 +11,6 @@ import Register from "./pages/auth/register"
 import Login from "./pages/auth/login"
 import OAuthCallback from "./pages/auth/oauth-callback"
 import { ProtectedRoute } from "./components/ProtectedRoute"
-import Layout from "./pages/dashboard/layout"
-import Dashboard from "./pages/dashboard/dashboard"
 import Logout from "./pages/auth/logout"
 
 createRoot(document.getElementById("root")!).render(
@@ -28,11 +26,8 @@ createRoot(document.getElementById("root")!).render(
               <Route path="auth/oauth-callback" element={<OAuthCallback />} />
               <Route path="logout" element={<Logout />} />
 
-              {/* Protected Dashboard Routes */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Layout />}>
-                  <Route index element={<Dashboard />} />
-                </Route>
+                {/* protected routes */}
               </Route>
             </Routes>
           </BrowserRouter>
