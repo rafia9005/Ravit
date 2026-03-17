@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"Ravit/internal/pkg/utils"
 	"time"
 )
 
@@ -15,7 +16,9 @@ const (
 type User struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	Name      string    `json:"name"`
-	Email     string    `json:"email"`
+	Username  string    `json:"username" gorm:"uniqueIndex"`
+	Email     string    `json:"email" gorm:"uniqueIndex"`
+	Banner    string    `json:"banner"`
 	AuthType  string    `json:"auth_type" gorm:"type:enum('email', 'google', 'github');default:'email'"`
 	Role      string    `json:"role" gorm:"type:enum('admin', 'user', 'reviewer');default:'user'"`
 	Bio       string    `json:"bio" gorm:"type:text"`
@@ -31,10 +34,12 @@ func (*User) TableName() string {
 }
 
 // NewUser creates a new user with email authentication type
+// Username is auto-generated from email if not provided
 func NewUser(name, email, password string) *User {
 	now := time.Now()
 	return &User{
 		Name:      name,
+		Username:  utils.GenerateUsernameFromEmail(email),
 		Email:     email,
 		Password:  password,
 		AuthType:  AuthTypeEmail,
@@ -44,10 +49,12 @@ func NewUser(name, email, password string) *User {
 }
 
 // NewOAuthUser creates a new user with OAuth authentication type
+// Username is auto-generated from name + random suffix
 func NewOAuthUser(name, email, avatar, authType string) *User {
 	now := time.Now()
 	return &User{
 		Name:      name,
+		Username:  utils.GenerateUsernameFromName(name),
 		Email:     email,
 		Avatar:    avatar,
 		AuthType:  authType,
