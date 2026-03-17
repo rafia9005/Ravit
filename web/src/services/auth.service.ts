@@ -154,11 +154,11 @@ class AuthService {
       const response = (error as any).response;
       
       // Try to get error message from different response fields
-      const message =
-        response?.data?.error || // First try error field from backend
-        response?.data?.message || // Then try message field
-        (response as any)?.statusText || // Then try statusText
-        "Terjadi kesalahan";
+       const message =
+         response?.data?.error || // First try error field from backend
+         response?.data?.message || // Then try message field
+         (response as any)?.statusText || // Then try statusText
+         "An error occurred";
       
       return new Error(message);
     }
@@ -167,7 +167,7 @@ class AuthService {
       return error;
     }
 
-    return new Error("Terjadi kesalahan yang tidak diketahui");
+    return new Error("An unknown error occurred");
   }
 }
 

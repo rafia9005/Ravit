@@ -24,11 +24,11 @@ export const useRegister = () => {
       
       // Don't auto-login - user needs to login manually
       return response;
-    } catch (err) {
-      // Set error message dari API response
-      const errorMessage = err instanceof Error ? err.message : "Registrasi gagal";
-      setError(errorMessage);
-      throw err;
+     } catch (err) {
+       // Set error message dari API response
+       const errorMessage = err instanceof Error ? err.message : "Registration failed";
+       setError(errorMessage);
+       throw err;
     } finally {
       console.log("[useRegister] Setting isLoading to false");
       setIsLoading(false);

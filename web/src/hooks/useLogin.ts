@@ -26,11 +26,11 @@ export const useLogin = () => {
       console.log("[useLogin] Calling login() to update auth context");
       login(response.data.user, response.data.token);
       return response;
-    } catch (err) {
-      // Set error message dari API response
-      const errorMessage = err instanceof Error ? err.message : "Login gagal";
-      setError(errorMessage);
-      throw err;
+     } catch (err) {
+       // Set error message dari API response
+       const errorMessage = err instanceof Error ? err.message : "Login failed";
+       setError(errorMessage);
+       throw err;
     } finally {
       console.log("[useLogin] Setting isLoading to false");
       setIsLoading(false);

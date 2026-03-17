@@ -54,9 +54,9 @@ export default function Register() {
         password: validatedData.password,
       });
       
-      // On success, show success message
-      // User will see "Registrasi berhasil" and can click login link
-      // No auto-redirect to login page
+       // On success, show success message
+       // User will see "Registration successful" and can click login link
+       // No auto-redirect to login page
     } catch (err: any) {
       if (err instanceof ZodError) {
         const newErrors: Record<string, string> = {};
@@ -76,24 +76,24 @@ export default function Register() {
    return (
     <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-         {/* Header */}
-         <div className="mb-8 flex flex-col items-center justify-center text-center">
-           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-4xl">
-             Buat Akun Baru
-           </h1>
-           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-             Bergabunglah dengan kami dan mulai menerbitkan karya Anda
-           </p>
-         </div>
+          {/* Header */}
+          <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-4xl">
+              Create New Account
+            </h1>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Join us and start sharing on Ravit
+            </p>
+          </div>
 
-         {/* Card */}
-         <Card className="border-zinc-200 shadow-lg dark:border-zinc-800">
-            <CardHeader className="space-y-2 pb-4 text-center">
-              <CardTitle className="text-2xl">Daftar</CardTitle>
-              <CardDescription className="text-center">
-                Isi detail di bawah untuk membuat akun Anda
-              </CardDescription>
-            </CardHeader>
+          {/* Card */}
+          <Card className="border-zinc-200 shadow-lg dark:border-zinc-800">
+             <CardHeader className="space-y-2 pb-4 text-center">
+               <CardTitle className="text-2xl">Register</CardTitle>
+               <CardDescription className="text-center">
+                 Fill in the details below to create your account
+               </CardDescription>
+             </CardHeader>
            <CardContent className="space-y-6 pb-6">
                {successMessage && (
                  <div className="flex items-start gap-3 rounded-lg bg-green-50 p-3 dark:bg-green-950">
@@ -109,9 +109,9 @@ export default function Register() {
                  <div className="flex items-start gap-3 rounded-lg bg-red-50 p-3 dark:bg-red-950">
                   <LucideAlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
                   <div className="flex-1">
-                     <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                       {authError || oauthError || "Silakan periksa kesalahan di bawah"}
-                     </p>
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                        {authError || oauthError || "Please check the errors below"}
+                      </p>
                     {Object.entries(errors).map(([field, message]) => (
                       <p key={field} className="text-xs text-red-700 dark:text-red-300 mt-1">
                         {message}
@@ -121,17 +121,17 @@ export default function Register() {
                 </div>
               )}
              <form onSubmit={handleSubmit} className="space-y-4">
-               {/* Name Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">
-                    Nama Lengkap
-                  </Label>
-                  <div className="relative">
-                    <LucideUser className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Nama Anda"
+              {/* Name Field */}
+                 <div className="space-y-2">
+                   <Label htmlFor="name" className="text-sm font-medium">
+                     Full Name
+                   </Label>
+                   <div className="relative">
+                     <LucideUser className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                     <Input
+                       id="name"
+                       type="text"
+                       placeholder="Your Name"
                      className={`pl-10 ${errors.name ? "border-red-500" : ""}`}
                      value={formData.name}
                      onChange={handleChange}
@@ -165,17 +165,17 @@ export default function Register() {
                  )}
                </div>
 
-               {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Kata Sandi
-                  </Label>
-                  <div className="relative">
-                    <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Masukkan kata sandi Anda"
+                {/* Password Field */}
+                 <div className="space-y-2">
+                   <Label htmlFor="password" className="text-sm font-medium">
+                     Password
+                   </Label>
+                   <div className="relative">
+                     <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                     <Input 
+                       id="password" 
+                       type="password" 
+                       placeholder="Enter your password"
                      className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
                      value={formData.password}
                      onChange={handleChange}
@@ -187,17 +187,17 @@ export default function Register() {
                  )}
                </div>
 
-               {/* Confirm Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                    Konfirmasi Kata Sandi
-                  </Label>
-                  <div className="relative">
-                    <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      placeholder="Konfirmasi kata sandi Anda"
+                {/* Confirm Password Field */}
+                 <div className="space-y-2">
+                   <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                     Confirm Password
+                   </Label>
+                   <div className="relative">
+                     <LucideLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                     <Input 
+                       id="confirmPassword" 
+                       type="password" 
+                       placeholder="Confirm your password"
                      className={`pl-10 ${errors.confirmPassword ? "border-red-500" : ""}`}
                      value={formData.confirmPassword}
                      onChange={handleChange}
@@ -217,13 +217,13 @@ export default function Register() {
                   size="lg"
                 >
                    {isSubmitting || isLoading ? (
-                     <>
-                       <LucideLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                       Membuat akun...
-                     </>
-                   ) : (
-                     "Buat akun"
-                   )}
+                      <>
+                        <LucideLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      "Create account"
+                    )}
                </Button>
              </form>
 
@@ -233,10 +233,10 @@ export default function Register() {
                 <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                 <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
-                   Atau daftar dengan
-                 </span>
-               </div>
+                  <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
+                    Or register with
+                  </span>
+                </div>
             </div>
 
             {/* Social Buttons */}
@@ -283,34 +283,34 @@ export default function Register() {
             </div>
           </CardContent>
 
-          {/* Footer */}
-           <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-200 dark:border-zinc-800 pt-4">
-             <p className="flex items-center justify-center gap-1 text-sm">
-               <span className="text-zinc-600 dark:text-zinc-400">
-                 Sudah memiliki akun?
-               </span>
-               <Link
-                 to="/login"
-                 className="font-semibold text-zinc-900 hover:underline dark:text-zinc-50"
-               >
-                 Masuk
-               </Link>
-             </p>
-           </CardFooter>
+           {/* Footer */}
+            <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <p className="flex items-center justify-center gap-1 text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">
+                  Already have an account?
+                </span>
+                <Link
+                  to="/login"
+                  className="font-semibold text-zinc-900 hover:underline dark:text-zinc-50"
+                >
+                  Login
+                </Link>
+              </p>
+            </CardFooter>
         </Card>
 
-         {/* Terms */}
-         <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-           Dengan melanjutkan, Anda setuju dengan{" "}
-           <Link to="/terms" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-             Syarat Layanan
-           </Link>{" "}
-           dan{" "}
-           <Link to="/privacy" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-             Kebijakan Privasi
-           </Link>
-           .
-         </p>
+          {/* Terms */}
+          <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
+            By continuing, you agree to our{" "}
+            <Link to="/terms" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
+              Privacy Policy
+            </Link>
+            .
+          </p>
       </div>
     </div>
   );

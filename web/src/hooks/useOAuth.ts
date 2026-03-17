@@ -29,12 +29,12 @@ export const useOAuth = () => {
 
       // Redirect to OAuth provider
       window.location.href = oauthUrl;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : `${provider} login gagal`;
-      console.error(`[useOAuth] ${provider} login error:`, errorMessage);
-      setError(errorMessage);
-      setIsLoading(false);
-    }
+     } catch (err) {
+       const errorMessage = err instanceof Error ? err.message : `${provider} login failed`;
+       console.error(`[useOAuth] ${provider} login error:`, errorMessage);
+       setError(errorMessage);
+       setIsLoading(false);
+     }
   };
 
   const loginWithGoogle = (mode: OAuthMode = "login") => handleOAuthLogin("google", mode);
