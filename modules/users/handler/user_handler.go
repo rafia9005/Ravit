@@ -90,8 +90,12 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	if req.Role != "" {
 		user.Role = req.Role
 	}
+	if req.Username != "" {
+		user.Username = req.Username
+	}
 	user.Bio = req.Bio
 	user.Avatar = req.Avatar
+	user.Banner = req.Banner
 	err := h.userService.CreateUser(ctx, user)
 	if err != nil {
 		if err == service.ErrEmailAlreadyUsed {
@@ -140,8 +144,12 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	if req.Role != "" {
 		user.Role = req.Role
 	}
+	if req.Username != "" {
+		user.Username = req.Username
+	}
 	user.Bio = req.Bio
 	user.Avatar = req.Avatar
+	user.Banner = req.Banner
 
 	err = h.userService.UpdateUser(ctx, user)
 	if err != nil {
