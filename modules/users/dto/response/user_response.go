@@ -11,10 +11,13 @@ import (
 type UserResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
+	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
 	Bio       string    `json:"bio"`
 	Avatar    string    `json:"avatar"`
+	Banner    string    `json:"banner"`
+	AuthType  string    `json:"auth_type"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -24,10 +27,13 @@ func FromEntity(user *entity.User) *UserResponse {
 	return &UserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
+		Username:  user.Username,
 		Email:     user.Email,
 		Role:      user.Role,
 		Bio:       user.Bio,
 		Avatar:    user.Avatar,
+		Banner:    user.Banner,
+		AuthType:  user.AuthType,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
