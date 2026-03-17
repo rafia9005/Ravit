@@ -56,7 +56,7 @@ func generateStateToken() (string, error) {
 func (h *OAuthHandler) GoogleLogin(c echo.Context) error {
 	state, err := generateStateToken()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate state token"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate state token"})
 	}
 
 	// Get mode parameter (login or register)
@@ -87,7 +87,7 @@ func (h *OAuthHandler) GoogleLogin(c echo.Context) error {
 
 	url, err := h.oauthService.GetAuthURL(service.ProviderGoogle, state)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate OAuth URL"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate OAuth URL"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"url": url})
@@ -100,12 +100,12 @@ func (h *OAuthHandler) GoogleCallback(c echo.Context) error {
 	// Validate state
 	stateCookie, err := c.Cookie("oauth_state")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token tidak ditemukan"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token not found"})
 	}
 
 	state := c.QueryParam("state")
 	if state != stateCookie.Value {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid state token"})
 	}
 
 	// Get mode from cookie
@@ -131,21 +131,21 @@ func (h *OAuthHandler) GoogleCallback(c echo.Context) error {
 
 	code := c.QueryParam("code")
 	if code == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Authorization code tidak ditemukan"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Authorization code not found"})
 	}
 
 	// Exchange code for token
 	token, err := h.oauthService.ExchangeCode(ctx, service.ProviderGoogle, code)
 	if err != nil {
 		h.log.Error("Failed to exchange code: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal exchange authorization code"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to exchange authorization code"})
 	}
 
 	// Get user info
 	userInfo, err := h.oauthService.GetUserInfo(ctx, service.ProviderGoogle, token)
 	if err != nil {
 		h.log.Error("Failed to get user info: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mendapatkan informasi pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user information"})
 	}
 
 	// Find or create user
@@ -166,7 +166,7 @@ func (h *OAuthHandler) GoogleCallback(c echo.Context) error {
 	})
 	if err != nil {
 		h.log.Error("Failed to generate JWT: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate token"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
 
 	// Redirect to frontend with token
@@ -179,7 +179,7 @@ func (h *OAuthHandler) GoogleCallback(c echo.Context) error {
 func (h *OAuthHandler) GitHubLogin(c echo.Context) error {
 	state, err := generateStateToken()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate state token"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate state token"})
 	}
 
 	// Get mode parameter (login or register)
@@ -210,7 +210,7 @@ func (h *OAuthHandler) GitHubLogin(c echo.Context) error {
 
 	url, err := h.oauthService.GetAuthURL(service.ProviderGitHub, state)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate OAuth URL"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate OAuth URL"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"url": url})
@@ -223,12 +223,12 @@ func (h *OAuthHandler) GitHubCallback(c echo.Context) error {
 	// Validate state
 	stateCookie, err := c.Cookie("oauth_state")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token tidak ditemukan"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token not found"})
 	}
 
 	state := c.QueryParam("state")
 	if state != stateCookie.Value {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "State token tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid state token"})
 	}
 
 	// Get mode from cookie
@@ -254,21 +254,21 @@ func (h *OAuthHandler) GitHubCallback(c echo.Context) error {
 
 	code := c.QueryParam("code")
 	if code == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Authorization code tidak ditemukan"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Authorization code not found"})
 	}
 
 	// Exchange code for token
 	token, err := h.oauthService.ExchangeCode(ctx, service.ProviderGitHub, code)
 	if err != nil {
 		h.log.Error("Failed to exchange code: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal exchange authorization code"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to exchange authorization code"})
 	}
 
 	// Get user info
 	userInfo, err := h.oauthService.GetUserInfo(ctx, service.ProviderGitHub, token)
 	if err != nil {
 		h.log.Error("Failed to get user info: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mendapatkan informasi pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user information"})
 	}
 
 	// Find or create user
@@ -289,7 +289,7 @@ func (h *OAuthHandler) GitHubCallback(c echo.Context) error {
 	})
 	if err != nil {
 		h.log.Error("Failed to generate JWT: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal generate token"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
 
 	// Redirect to frontend with token
@@ -316,7 +316,7 @@ func (h *OAuthHandler) findOrCreateUser(ctx context.Context, userInfo *service.O
 		if user.AuthType != expectedAuthType {
 			// Auth type mismatch - user registered with different method
 			h.log.Warn("Auth type mismatch for user %s: expected %s, got %s", user.Email, expectedAuthType, user.AuthType)
-			return nil, fmt.Errorf("email %s sudah terdaftar dengan metode login berbeda. Silakan gunakan metode login yang sama atau email lain", user.Email)
+			return nil, fmt.Errorf("email %s is already registered with a different login method. Please use the same login method or a different email", user.Email)
 		}
 
 		// User exists with matching auth type, update avatar if different
@@ -334,7 +334,7 @@ func (h *OAuthHandler) findOrCreateUser(ctx context.Context, userInfo *service.O
 	// If mode is "login", don't allow creating new user
 	if mode == "login" {
 		h.log.Warn("User not found on login attempt for email: %s with provider: %s", userInfo.Email, userInfo.Provider)
-		return nil, fmt.Errorf("email %s belum terdaftar. Silakan daftar terlebih dahulu atau gunakan email lain", userInfo.Email)
+		return nil, fmt.Errorf("email %s is not registered yet. Please register first or use a different email", userInfo.Email)
 	}
 
 	// If mode is "register", create new user with OAuth auth type

@@ -49,12 +49,12 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	req := new(userRequest.CreateUserRequest)
 	if err := c.Bind(req); err != nil {
 		h.log.Error("Failed to bind request:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Data yang dikirim tidak valid")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Invalid request data")
 	}
 
 	if err := c.Validate(req); err != nil {
 		h.log.Error("Validation failed:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validasi data gagal")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validation failed")
 	}
 
 	h.log.Debug("Request validated successfully:", req)
@@ -69,10 +69,10 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	if err != nil {
 		if err == service.ErrEmailAlreadyUsed {
 			h.log.Warn("Email already in use:", req.Email)
-			return h.r.ErrorResponse(c, http.StatusConflict, "Email sudah digunakan")
+			return h.r.ErrorResponse(c, http.StatusConflict, "Email already in use")
 		}
 		h.log.Error("Failed to create user:", err)
-		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Gagal membuat pengguna")
+		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Failed to create user")
 	}
 
 	h.log.Debug("User created successfully:", user)
@@ -82,7 +82,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 
 	return h.r.SuccessResponse(c, map[string]interface{}{
 		"user": userResponse.FromEntity(user),
-	}, "Pengguna berhasil terdaftar")
+	}, "User registered successfully")
 }
 
 // Login handles user login.
@@ -92,12 +92,12 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	req := new(userRequest.LoginRequest)
 	if err := c.Bind(req); err != nil {
 		h.log.Error("Failed to bind request:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Data yang dikirim tidak valid")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Invalid request data")
 	}
 
 	if err := c.Validate(req); err != nil {
 		h.log.Error("Validation failed:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validasi data gagal")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validation failed")
 	}
 
 	h.log.Debug("Request validated successfully:", req)
@@ -106,10 +106,10 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	if err != nil {
 		if err == service.ErrUserNotFound || err == service.ErrInvalidPassword {
 			h.log.Warn("Invalid email or password for:", req.Email)
-			return h.r.ErrorResponse(c, http.StatusUnauthorized, "Email atau kata sandi tidak valid")
+			return h.r.ErrorResponse(c, http.StatusUnauthorized, "Invalid email or password")
 		}
 		h.log.Error("Failed to process login:", err)
-		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Gagal memproses login")
+		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Failed to process login")
 	}
 
 	h.log.Debug("User authenticated successfully:", user)
@@ -118,7 +118,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	_, accessToken, refreshToken, err := h.authService.GenerateTokens(c.Request().Context(), user)
 	if err != nil {
 		h.log.Error("Failed to generate tokens:", err)
-		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Gagal membuat token")
+		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate tokens")
 	}
 
 	tokenResp := authResponse.NewTokenResponse(accessToken, refreshToken, 15*60)
@@ -126,7 +126,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	return h.r.SuccessResponse(c, map[string]interface{}{
 		"token": tokenResp,
 		"user":  userResponse.FromEntity(user),
-	}, "Login berhasil")
+	}, "Login successful")
 }
 
 // RefreshToken handles token refresh request
@@ -136,12 +136,12 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 	req := new(authRequest.RefreshTokenRequest)
 	if err := c.Bind(req); err != nil {
 		h.log.Error("Failed to bind request:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Data yang dikirim tidak valid")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Invalid request data")
 	}
 
 	if err := c.Validate(req); err != nil {
 		h.log.Error("Validation failed:", err)
-		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validasi data gagal")
+		return h.r.ErrorResponse(c, http.StatusBadRequest, "Validation failed")
 	}
 
 	h.log.Debug("Request validated successfully")
@@ -150,7 +150,7 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 	accessToken, err := h.authService.RefreshAccessToken(c.Request().Context(), req.RefreshToken)
 	if err != nil {
 		h.log.Warn("Invalid refresh token:", err)
-		return h.r.ErrorResponse(c, http.StatusUnauthorized, "Token refresh tidak valid")
+		return h.r.ErrorResponse(c, http.StatusUnauthorized, "Invalid refresh token")
 	}
 
 	h.log.Debug("Access token refreshed successfully")
@@ -159,7 +159,7 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 
 	return h.r.SuccessResponse(c, map[string]interface{}{
 		"token": tokenResp,
-	}, "Token berhasil diperbarui")
+	}, "Token refreshed successfully")
 }
 
 // Logout handles user logout
@@ -172,19 +172,19 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 		// If user_id is not in context, it means token is invalid/expired
 		// This is acceptable for logout - user is already effectively logged out
 		h.log.Info("User ID not found in context, treating as already logged out")
-		return h.r.SuccessResponse(c, map[string]interface{}{}, "Berhasil keluar dari sistem")
+		return h.r.SuccessResponse(c, map[string]interface{}{}, "Logged out successfully")
 	}
 
 	// Invalidate refresh token in database
 	err := h.authService.Logout(c.Request().Context(), userID)
 	if err != nil {
 		h.log.Error("Failed to logout:", err)
-		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Gagal keluar dari sistem")
+		return h.r.ErrorResponse(c, http.StatusInternalServerError, "Failed to logout")
 	}
 
 	h.log.Debug("User logged out successfully")
 
-	return h.r.SuccessResponse(c, map[string]interface{}{}, "Berhasil keluar dari sistem")
+	return h.r.SuccessResponse(c, map[string]interface{}{}, "Logged out successfully")
 }
 
 // RegisterRoutes sets up the auth routes.

@@ -47,7 +47,7 @@ func (h *UserHandler) GetAllUsers(c echo.Context) error {
 
 	users, err := h.userService.GetAllUsers(ctx)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mengambil data pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get users"})
 	}
 
 	return c.JSON(http.StatusOK, response.FromEntities(users))
@@ -59,15 +59,15 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID pengguna tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
 
 	user, err := h.userService.GetUserByID(ctx, uint(id))
 	if err != nil {
 		if err == service.ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Pengguna tidak ditemukan"})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mengambil data pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user"})
 	}
 
 	return c.JSON(http.StatusOK, response.FromEntity(user))
@@ -79,11 +79,11 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 
 	req := new(request.CreateUserRequest)
 	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Data yang dikirim tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 	}
 
 	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validasi data gagal"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validation failed"})
 	}
 
 	user := entity.NewUser(req.Name, req.Email, req.Password)
@@ -95,9 +95,9 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	err := h.userService.CreateUser(ctx, user)
 	if err != nil {
 		if err == service.ErrEmailAlreadyUsed {
-			return c.JSON(http.StatusConflict, map[string]string{"error": "Email sudah digunakan"})
+			return c.JSON(http.StatusConflict, map[string]string{"error": "Email already in use"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal membuat pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
 	// event bus publish
@@ -112,24 +112,24 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID pengguna tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
 
 	req := new(request.UpdateUserRequest)
 	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Data yang dikirim tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 	}
 
 	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validasi data gagal"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validation failed"})
 	}
 
 	user, err := h.userService.GetUserByID(ctx, uint(id))
 	if err != nil {
 		if err == service.ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Pengguna tidak ditemukan"})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mengambil data pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user"})
 	}
 
 	user.Name = req.Name
@@ -145,7 +145,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 	err = h.userService.UpdateUser(ctx, user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal memperbarui pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
 
 	return c.JSON(http.StatusOK, response.FromEntity(user))
@@ -157,15 +157,15 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID pengguna tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
 
 	err = h.userService.DeleteUser(ctx, uint(id))
 	if err != nil {
 		if err == service.ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Pengguna tidak ditemukan"})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal menghapus pengguna"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
 	}
 
 	return c.NoContent(http.StatusNoContent)
@@ -178,18 +178,18 @@ func (h *UserHandler) GetCurrentUser(c echo.Context) error {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := c.Get("user_id").(uint)
 	if !ok {
-		return h.r.UnauthorizedResponse(c, "Tidak diizinkan")
+		return h.r.UnauthorizedResponse(c, "Unauthorized")
 	}
 
 	user, err := h.userService.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == service.ErrUserNotFound {
-			return h.r.NotFoundResponse(c, "Pengguna tidak ditemukan")
+			return h.r.NotFoundResponse(c, "User not found")
 		}
-		return h.r.InternalServerErrorResponse(c, "Gagal mengambil data pengguna")
+		return h.r.InternalServerErrorResponse(c, "Failed to get user")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntity(user), "Berhasil mengambil data pengguna")
+	return h.r.SuccessResponse(c, response.FromEntity(user), "User retrieved successfully")
 }
 
 // RegisterRoutes registers the user routes
