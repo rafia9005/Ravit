@@ -1,0 +1,11 @@
+logs/
+.opencode/
+.copilot/
+tmp/
+.env
+*.backup
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
