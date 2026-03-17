@@ -117,7 +117,7 @@ func (m *MediaUploader) UploadImage(file *multipart.FileHeader) (string, error) 
 
 	// Generate unique filename
 	filename := generateFilename(file.Filename)
-	destPath := filepath.Join(m.basePath, "posts", "images", filename)
+	destPath := filepath.Join(m.basePath, "media", "posts", "images", filename)
 
 	// Create directory if not exists
 	if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
@@ -156,7 +156,7 @@ func (m *MediaUploader) UploadVideo(file *multipart.FileHeader) (string, error) 
 
 	// Generate unique filename
 	filename := generateFilename(file.Filename)
-	destPath := filepath.Join(m.basePath, "posts", "videos", filename)
+	destPath := filepath.Join(m.basePath, "media", "posts", "videos", filename)
 
 	// Create directory if not exists
 	if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
