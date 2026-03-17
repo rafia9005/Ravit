@@ -41,7 +41,7 @@ export default function Login() {
     if (successMessage && !authError && !isSubmitting) {
       console.log("[Login useEffect] Navigation condition met, navigating to dashboard");
       const timer = setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 800);
       return () => clearTimeout(timer);
     }
