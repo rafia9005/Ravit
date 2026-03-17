@@ -27,6 +27,21 @@ func (r *LikeRepositoryImpl) FindByPostID(ctx context.Context, postID uint) ([]*
 	return likes, err
 }
 
+// FindByUserID retrieves likes for a given user with pagination
+func (r *LikeRepositoryImpl) FindByUserID(ctx context.Context, userID uint, limit, offset int) ([]*entity.Like, error) {
+	var likes []*entity.Like
+
+	err := database.DB.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&likes).
+		Error
+
+	return likes, err
+}
+
 // FindByUserAndPost retrieves a like by user and post
 func (r *LikeRepositoryImpl) FindByUserAndPost(ctx context.Context, userID, postID uint) (*entity.Like, error) {
 	var like entity.Like
@@ -56,6 +71,30 @@ func (r *LikeRepositoryImpl) HasUserLiked(ctx context.Context, userID, postID ui
 	}
 
 	return count > 0, nil
+}
+
+// HasUserLikedMultiple checks whether a user liked multiple posts
+func (r *LikeRepositoryImpl) HasUserLikedMultiple(ctx context.Context, userID uint, postIDs []uint) (map[uint]bool, error) {
+	result := make(map[uint]bool)
+	if len(postIDs) == 0 {
+		return result, nil
+	}
+
+	var likes []*entity.Like
+	err := database.DB.WithContext(ctx).
+		Where("user_id = ? AND post_id IN ?", userID, postIDs).
+		Find(&likes).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, like := range likes {
+		result[like.PostID] = true
+	}
+
+	return result, nil
 }
 
 // Create persists a like
