@@ -303,22 +303,24 @@ func (h *PostHandler) GetReplies(c echo.Context) error {
 
 // RegisterRoutes registers the post routes
 func (h *PostHandler) RegisterRoutes(e *echo.Echo, basePath string) {
-	group := e.Group(basePath + "/posts")
-	group.Use(middleware.Auth)
+	// Public routes (no auth required)
+	publicGroup := e.Group(basePath + "/posts")
+	publicGroup.GET("/:id", h.GetPost)
+	publicGroup.GET("/:id/replies", h.GetReplies)
+
+	// Protected routes (auth required)
+	authGroup := e.Group(basePath + "/posts")
+	authGroup.Use(middleware.Auth)
 
 	// Feed
-	group.GET("/feed", h.GetFeed)
+	authGroup.GET("/feed", h.GetFeed)
 
 	// Posts CRUD
-	group.GET("/:id", h.GetPost)
-	group.POST("", h.CreatePost)
-	group.PUT("/:id", h.UpdatePost)
-	group.DELETE("/:id", h.DeletePost)
+	authGroup.POST("", h.CreatePost)
+	authGroup.PUT("/:id", h.UpdatePost)
+	authGroup.DELETE("/:id", h.DeletePost)
 
 	// Likes
-	group.POST("/:id/like", h.LikePost)
-	group.DELETE("/:id/like", h.UnlikePost)
-
-	// Replies
-	group.GET("/:id/replies", h.GetReplies)
+	authGroup.POST("/:id/like", h.LikePost)
+	authGroup.DELETE("/:id/like", h.UnlikePost)
 }
