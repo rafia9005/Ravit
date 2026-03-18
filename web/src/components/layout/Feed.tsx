@@ -4,6 +4,7 @@ import { PostComposer, PostList } from "@/components/posts";
 import { useAuth } from "@/hooks/useAuth";
 import { usePosts } from "@/hooks/usePosts";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { system } from "@/contents";
 
 export function Feed() {
   const navigate = useNavigate();
@@ -53,18 +54,20 @@ export function Feed() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen border-x bg-background/50 backdrop-blur-sm">
-      <header className="sticky top-0 z-10 p-4 border-b bg-background/80 backdrop-blur-md flex items-center justify-between">
-        <h2 className="text-xl font-bold tracking-tight">Home</h2>
+    <div className="flex flex-col min-h-screen border-x bg-background">
+      <header className="sticky top-0 z-10 p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
+        <h2 className="text-xl font-bold tracking-tight">{system.shortName} Platform</h2>
       </header>
 
-      {/* Post Composer */}
+      {/* Post Composer Container */}
       {isAuthenticated && (
-        <PostComposer
-          onSubmit={handleCreatePost}
-          onUploadImages={uploadImages}
-          onUploadVideos={uploadVideos}
-        />
+        <div className="p-3 border-b bg-card/50">
+          <PostComposer
+            onSubmit={handleCreatePost}
+            onUploadImages={uploadImages}
+            onUploadVideos={uploadVideos}
+          />
+        </div>
       )}
 
       {/* Error Display */}

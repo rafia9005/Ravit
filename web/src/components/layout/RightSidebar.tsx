@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input"
-import { Search, MoreHorizontal } from "lucide-react"
+import { Search } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -25,47 +25,48 @@ export function RightSidebar() {
       </div>
 
       {/* Trends Card */}
-      <Card className="rounded-2xl bg-muted/30 border-none shadow-none overflow-hidden">
-        <CardHeader className="p-4 pb-0">
-          <CardTitle className="text-xl font-extrabold tracking-tight">Trends for you</CardTitle>
+      <Card className="rounded-xl bg-card border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 pb-2 border-b bg-muted/20">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Trending Communities</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mt-3 flex flex-col">
+        <CardContent className="p-0 flex flex-col">
           {trends.map((trend, i) => (
-            <div key={i} className="px-4 py-3 flex flex-col hover:bg-muted/50 transition-colors group relative cursor-pointer">
-              <span className="text-xs text-muted-foreground">{trend.category}</span>
-              <span className="font-bold text-[15px] group-hover:underline">{trend.topic}</span>
-              <span className="text-xs text-muted-foreground">{trend.posts} Posts</span>
-              <Button size="icon" variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="size-4" />
+            <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors group relative cursor-pointer border-b last:border-0">
+              <div className="flex flex-col">
+                <span className="font-bold text-[14px] group-hover:underline text-primary">r/{trend.topic.replace("#", "").toLowerCase()}</span>
+                <span className="text-xs text-muted-foreground">{trend.posts} members</span>
+              </div>
+              <Button size="sm" variant="outline" className="rounded-full h-8 px-4 font-bold border-primary text-primary hover:bg-primary/5">
+                Join
               </Button>
             </div>
           ))}
-          <Button variant="link" className="text-primary justify-start p-4 hover:no-underline hover:bg-muted/50 h-auto rounded-none">
-            Show more
+          <Button variant="ghost" className="text-muted-foreground justify-center p-3 hover:no-underline hover:bg-muted/50 h-auto rounded-none text-xs font-bold">
+            VIEW ALL
           </Button>
         </CardContent>
       </Card>
 
       {/* Who to follow */}
-      <Card className="rounded-2xl bg-muted/30 border-none shadow-none overflow-hidden">
-        <CardHeader className="p-4 pb-0">
-          <CardTitle className="text-xl font-extrabold tracking-tight">Who to follow</CardTitle>
+      <Card className="rounded-xl bg-card border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 pb-2 border-b bg-muted/20">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Suggested Users</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mt-3 flex flex-col gap-4 px-4 pb-4">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="size-10 rounded-full bg-muted border overflow-hidden">
+        <CardContent className="p-0 flex flex-col">
+          <div className="p-4 flex items-center gap-3 group cursor-pointer border-b last:border-0 hover:bg-muted/50 transition-colors">
+            <div className="size-8 rounded shadow-sm bg-muted border overflow-hidden">
               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="Sarah" />
             </div>
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-bold text-sm truncate hover:underline">Sarah Jones</span>
-              <span className="text-muted-foreground text-xs truncate">@sarah_codes</span>
+              <span className="text-muted-foreground text-xs truncate">u/sarah_codes</span>
             </div>
-            <Button size="sm" className="rounded-full font-bold px-4 bg-foreground text-background hover:bg-foreground/90">
+            <Button size="sm" className="rounded-full h-8 font-bold px-4">
               Follow
             </Button>
           </div>
-          <Button variant="link" className="text-primary justify-start p-0 hover:no-underline h-auto font-normal">
-            Show more
+          <Button variant="ghost" className="text-muted-foreground justify-center p-3 hover:no-underline hover:bg-muted/50 h-auto rounded-none text-xs font-bold">
+            SHOW MORE
           </Button>
         </CardContent>
       </Card>
