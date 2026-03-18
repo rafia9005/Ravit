@@ -11,7 +11,9 @@ import (
 	"Ravit/modules/users/domain/service"
 	"Ravit/modules/users/dto/request"
 	"Ravit/modules/users/dto/response"
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -200,6 +202,62 @@ func (h *UserHandler) GetCurrentUser(c echo.Context) error {
 	return h.r.SuccessResponse(c, response.FromEntity(user), "User retrieved successfully")
 }
 
+// UpdateCurrentUser updates the current authenticated user's profile
+func (h *UserHandler) UpdateCurrentUser(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	// Get user ID from context (set by auth middleware)
+	userID, ok := c.Get("user_id").(uint)
+	if !ok {
+		return h.r.UnauthorizedResponse(c, "Unauthorized")
+	}
+
+	// Read raw body for debug logging
+	bodyBytes, _ := io.ReadAll(c.Request().Body)
+	h.log.Info("UpdateCurrentUser raw body", "body", string(bodyBytes))
+	// Reset body for binding
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	req := new(request.UpdateProfileRequest)
+	if err := c.Bind(req); err != nil {
+		h.log.Info("UpdateCurrentUser Bind error", "error", err.Error())
+		return h.r.BadRequestResponse(c, "Invalid request data")
+	}
+
+	if err := c.Validate(req); err != nil {
+		h.log.Info("UpdateCurrentUser Validate error", "error", err.Error())
+		return h.r.BadRequestResponse(c, "Validation failed")
+	}
+
+	// Debug: Log the incoming request
+	h.log.Info("UpdateCurrentUser request received", "name", req.Name, "bio", req.Bio, "avatar", req.Avatar, "banner", req.Banner)
+
+	user, err := h.userService.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == service.ErrUserNotFound {
+			return h.r.NotFoundResponse(c, "User not found")
+		}
+		return h.r.InternalServerErrorResponse(c, "Failed to get user")
+	}
+
+	// Update fields (always update provided fields, even if empty to allow clearing)
+	if req.Name != "" {
+		user.Name = req.Name
+	}
+	user.Bio = req.Bio
+	user.Avatar = req.Avatar
+	user.Banner = req.Banner
+
+	err = h.userService.UpdateUser(ctx, user)
+	if err != nil {
+		h.log.Info("UpdateCurrentUser UpdateUser error", "error", err.Error())
+		return h.r.InternalServerErrorResponse(c, "Failed to update profile")
+	}
+
+	h.log.Info("UpdateCurrentUser success", "userID", user.ID, "name", user.Name, "banner", user.Banner)
+	return h.r.SuccessResponse(c, response.FromEntity(user), "Profile updated successfully")
+}
+
 // GetUserProfile gets a user profile by username
 func (h *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -233,6 +291,7 @@ func (h *UserHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 	authGroup.Use(middleware.Auth)
 	authGroup.GET("", h.GetAllUsers)
 	authGroup.GET("/me", h.GetCurrentUser)
+	authGroup.PUT("/me", h.UpdateCurrentUser)
 	authGroup.GET("/:id", h.GetUser)
 	authGroup.PUT("/:id", h.UpdateUser)
 	authGroup.DELETE("/:id", h.DeleteUser)

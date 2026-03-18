@@ -34,3 +34,11 @@ type ChnagePasswordRequest struct {
 	Password        string `json:"password" validate:"required"`
 	ConfirmPassword string `json:"confirm_password" validate:"required, min=6"`
 }
+
+// UpdateProfileRequest represents a request to update current user's profile
+type UpdateProfileRequest struct {
+	Name   string `json:"name" validate:"omitempty"`
+	Bio    string `json:"bio" validate:"omitempty,max=500"`
+	Avatar string `json:"avatar" validate:"omitempty"`
+	Banner string `json:"banner" validate:"omitempty"`
+}
