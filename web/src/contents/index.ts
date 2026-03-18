@@ -3,3 +3,6 @@ export const system = {
 	description: "Ravit social media platform for developer.",
 	name: "Ravit - Social Media Platform for Developers",
 };
+
+// Navigation content
+export * from "./navigation";
