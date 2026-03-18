@@ -1,14 +1,19 @@
 import { useState, useCallback } from "react";
 import UserService, { type UpdateProfileInput } from "@/services/user.service";
-import type { User, Post, PaginationParams } from "@/types";
+import type { User, Post, PaginationParams, UserFollow, FollowCounts } from "@/types";
 
 export function useProfile() {
   const [profile, setProfile] = useState<User | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userLikes, setUserLikes] = useState<Post[]>([]);
-  const [followers, setFollowers] = useState<User[]>([]);
-  const [following, setFollowing] = useState<User[]>([]);
+  const [followers, setFollowers] = useState<UserFollow[]>([]);
+  const [following, setFollowing] = useState<UserFollow[]>([]);
+  const [followCounts, setFollowCounts] = useState<FollowCounts>({
+    followers_count: 0,
+    following_count: 0,
+  });
   const [loading, setLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -17,6 +22,21 @@ export function useProfile() {
     setError(null);
     try {
       const response = await UserService.getProfile(userId);
+      setProfile(response.data);
+      return response.data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch profile");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchProfileByUsername = useCallback(async (username: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await UserService.getProfileByUsername(username);
       setProfile(response.data);
       return response.data;
     } catch (err) {
@@ -100,20 +120,74 @@ export function useProfile() {
   }, []);
 
   const followUser = useCallback(async (userId: number) => {
+    setFollowLoading(true);
     try {
       await UserService.followUser(userId);
+      // Update profile's is_following status
+      setProfile((prev) =>
+        prev ? { ...prev, is_following: true, followers_count: (prev.followers_count || 0) + 1 } : null
+      );
+      setFollowCounts((prev) => ({
+        ...prev,
+        followers_count: prev.followers_count + 1,
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to follow user");
       throw err;
+    } finally {
+      setFollowLoading(false);
     }
   }, []);
 
   const unfollowUser = useCallback(async (userId: number) => {
+    setFollowLoading(true);
     try {
       await UserService.unfollowUser(userId);
+      // Update profile's is_following status
+      setProfile((prev) =>
+        prev ? { ...prev, is_following: false, followers_count: Math.max(0, (prev.followers_count || 1) - 1) } : null
+      );
+      setFollowCounts((prev) => ({
+        ...prev,
+        followers_count: Math.max(0, prev.followers_count - 1),
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to unfollow user");
       throw err;
+    } finally {
+      setFollowLoading(false);
+    }
+  }, []);
+
+  const checkIsFollowing = useCallback(async (userId: number) => {
+    try {
+      const response = await UserService.isFollowing(userId);
+      return response.data?.is_following ?? false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const fetchFollowCounts = useCallback(async (userId: number) => {
+    try {
+      const response = await UserService.getFollowCounts(userId);
+      if (response.data) {
+        setFollowCounts(response.data);
+        // Also update profile counts
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                followers_count: response.data.followers_count,
+                following_count: response.data.following_count,
+              }
+            : null
+        );
+      }
+      return response.data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch follow counts");
+      return null;
     }
   }, []);
 
@@ -167,16 +241,21 @@ export function useProfile() {
     userLikes,
     followers,
     following,
+    followCounts,
     loading,
+    followLoading,
     error,
     hasMore,
     fetchProfile,
+    fetchProfileByUsername,
     fetchMyProfile,
     updateProfile,
     fetchUserPosts,
     fetchUserLikes,
     followUser,
     unfollowUser,
+    checkIsFollowing,
+    fetchFollowCounts,
     fetchFollowers,
     fetchFollowing,
     clearError,

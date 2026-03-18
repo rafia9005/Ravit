@@ -4,12 +4,16 @@ import type {
   User,
   Post,
   PaginationParams,
+  UserFollow,
+  FollowCounts,
+  IsFollowingResponse,
 } from "@/types";
 
 export interface UpdateProfileInput {
   name?: string;
   bio?: string;
   avatar?: string;
+  banner?: string;
 }
 
 class UserService {
@@ -26,6 +30,14 @@ class UserService {
    */
   async getProfile(userId: number): Promise<ApiResponse<User>> {
     const response = await Fetch.get<ApiResponse<User>>(`/users/${userId}`);
+    return response.data;
+  }
+
+  /**
+   * Get user profile by username
+   */
+  async getProfileByUsername(username: string): Promise<ApiResponse<User>> {
+    const response = await Fetch.get<ApiResponse<User>>(`/users/${username}/profile`);
     return response.data;
   }
 
@@ -69,10 +81,9 @@ class UserService {
    * Follow a user
    */
   async followUser(userId: number): Promise<ApiResponse<null>> {
-    const response = await Fetch.post<ApiResponse<null>>(
-      `/users/${userId}/follow`,
-      {}
-    );
+    const response = await Fetch.post<ApiResponse<null>>("/follows", {
+      user_id: userId,
+    });
     return response.data;
   }
 
@@ -81,7 +92,17 @@ class UserService {
    */
   async unfollowUser(userId: number): Promise<ApiResponse<null>> {
     const response = await Fetch.delete<ApiResponse<null>>(
-      `/users/${userId}/follow`
+      `/follows/${userId}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Check if following a user
+   */
+  async isFollowing(userId: number): Promise<ApiResponse<IsFollowingResponse>> {
+    const response = await Fetch.get<ApiResponse<IsFollowingResponse>>(
+      `/follows/check/${userId}`
     );
     return response.data;
   }
@@ -89,13 +110,13 @@ class UserService {
   /**
    * Get user's followers
    */
-  async getFollowers(userId: number, params?: PaginationParams): Promise<ApiResponse<User[]>> {
+  async getFollowers(userId: number, params?: PaginationParams): Promise<ApiResponse<UserFollow[]>> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
 
-    const response = await Fetch.get<ApiResponse<User[]>>(
-      `/users/${userId}/followers?${queryParams.toString()}`
+    const response = await Fetch.get<ApiResponse<UserFollow[]>>(
+      `/follows/users/${userId}/followers?${queryParams.toString()}`
     );
     return response.data;
   }
@@ -103,13 +124,23 @@ class UserService {
   /**
    * Get users that user is following
    */
-  async getFollowing(userId: number, params?: PaginationParams): Promise<ApiResponse<User[]>> {
+  async getFollowing(userId: number, params?: PaginationParams): Promise<ApiResponse<UserFollow[]>> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
 
-    const response = await Fetch.get<ApiResponse<User[]>>(
-      `/users/${userId}/following?${queryParams.toString()}`
+    const response = await Fetch.get<ApiResponse<UserFollow[]>>(
+      `/follows/users/${userId}/following?${queryParams.toString()}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Get follow counts for a user
+   */
+  async getFollowCounts(userId: number): Promise<ApiResponse<FollowCounts>> {
+    const response = await Fetch.get<ApiResponse<FollowCounts>>(
+      `/follows/users/${userId}/counts`
     );
     return response.data;
   }

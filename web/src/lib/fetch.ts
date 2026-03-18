@@ -27,6 +27,15 @@ Fetch.interceptors.request.use(
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`;
 		}
+		// Log PUT requests to /users/me for debugging
+		if (config.method === 'put' && config.url?.includes('/users/me')) {
+			console.log('[Fetch] PUT /users/me request:', {
+				url: config.url,
+				method: config.method,
+				data: config.data,
+				headers: config.headers,
+			});
+		}
 		return config;
 	},
 	(error) => {

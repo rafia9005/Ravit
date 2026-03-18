@@ -92,34 +92,62 @@ export function usePosts() {
   }, []);
 
   const likePost = useCallback(async (id: number) => {
+    // Optimistically update UI for posts in this hook's state
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, like_count: p.like_count + 1, is_liked: true }
+          : p
+      )
+    );
+    
     try {
       await PostService.likePost(id);
+    } catch (err) {
+      // Revert optimistic update on error
       setPosts((prev) =>
-        prev.map((post) =>
-          post.id === id
-            ? { ...post, like_count: post.like_count + 1, is_liked: true }
-            : post
+        prev.map((p) =>
+          p.id === id
+            ? { ...p, like_count: Math.max(0, p.like_count - 1), is_liked: false }
+            : p
         )
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to like post");
-      throw err;
+      // Don't throw error for "already liked" - it's not a real error
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (!errorMsg.includes("already liked")) {
+        setError(errorMsg);
+        throw err;
+      }
     }
   }, []);
 
   const unlikePost = useCallback(async (id: number) => {
+    // Optimistically update UI for posts in this hook's state
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, like_count: Math.max(0, p.like_count - 1), is_liked: false }
+          : p
+      )
+    );
+    
     try {
       await PostService.unlikePost(id);
+    } catch (err) {
+      // Revert optimistic update on error
       setPosts((prev) =>
-        prev.map((post) =>
-          post.id === id
-            ? { ...post, like_count: Math.max(0, post.like_count - 1), is_liked: false }
-            : post
+        prev.map((p) =>
+          p.id === id
+            ? { ...p, like_count: p.like_count + 1, is_liked: true }
+            : p
         )
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to unlike post");
-      throw err;
+      // Don't throw error for "not liked" - it's not a real error
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (!errorMsg.includes("not liked")) {
+        setError(errorMsg);
+        throw err;
+      }
     }
   }, []);
 

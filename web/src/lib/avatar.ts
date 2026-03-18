@@ -16,5 +16,5 @@ export function getAvatarUrl(avatar?: string | null): string | undefined {
 	// Jika avatar adalah URL lengkap, return as is
 	if (avatar.startsWith("http")) return avatar;
 	// Jika relative path, combine dengan base URL
-	return `${import.meta.env.VITE_API}${avatar}`;
+	return `${import.meta.env.VITE_API}/public/${avatar}`;
 }

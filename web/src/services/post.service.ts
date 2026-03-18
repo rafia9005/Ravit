@@ -107,6 +107,13 @@ class PostService {
   }
 
   /**
+   * Upload media (images) - generic method for profile/posts
+   */
+  async uploadMedia(files: File[]): Promise<ApiResponse<MediaUploadResponse>> {
+    return this.uploadImages(files);
+  }
+
+  /**
    * Upload videos for a post
    */
   async uploadVideos(files: File[]): Promise<ApiResponse<MediaUploadResponse>> {
