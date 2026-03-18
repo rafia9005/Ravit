@@ -7,6 +7,7 @@ import (
 	"Ravit/modules/comment/domain/repository"
 	"Ravit/modules/comment/domain/service"
 	"Ravit/modules/comment/handler"
+	userRepository "Ravit/modules/users/domain/repository"
 
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
@@ -36,6 +37,7 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 
 	// Initialize repositories
 	commentRepo := repository.NewCommentRepositoryImpl()
+	userRepo := userRepository.NewUserRepositoryImpl()
 	m.logger.Debug("Comment repository initialized")
 
 	// Initialize services
@@ -43,7 +45,7 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 	m.logger.Debug("Comment service initialized")
 
 	// Initialize handlers
-	m.commentHandler = handler.NewCommentHandler(m.logger, m.event, m.commentService)
+	m.commentHandler = handler.NewCommentHandler(m.logger, m.event, m.commentService, userRepo)
 	m.logger.Debug("Comment handler initialized")
 
 	m.logger.Info("Comment module initialized successfully")

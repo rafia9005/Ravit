@@ -35,12 +35,36 @@ func (r *CommentRepositoryImpl) FindByID(ctx context.Context, id uint) (*entity.
 	return &comment, nil
 }
 
-// FindByPostID retrieves comments by post ID
+// FindByPostID retrieves all comments by post ID (including replies)
 func (r *CommentRepositoryImpl) FindByPostID(ctx context.Context, postID uint, limit, offset int) ([]*entity.Comment, error) {
 	var comments []*entity.Comment
 	err := database.DB.WithContext(ctx).
 		Where("post_id = ?", postID).
 		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&comments).Error
+	return comments, err
+}
+
+// FindTopLevelByPostID retrieves only top-level comments (parent_id IS NULL)
+func (r *CommentRepositoryImpl) FindTopLevelByPostID(ctx context.Context, postID uint, limit, offset int) ([]*entity.Comment, error) {
+	var comments []*entity.Comment
+	err := database.DB.WithContext(ctx).
+		Where("post_id = ? AND parent_id IS NULL", postID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&comments).Error
+	return comments, err
+}
+
+// FindRepliesByParentID retrieves replies to a specific comment
+func (r *CommentRepositoryImpl) FindRepliesByParentID(ctx context.Context, parentID uint, limit, offset int) ([]*entity.Comment, error) {
+	var comments []*entity.Comment
+	err := database.DB.WithContext(ctx).
+		Where("parent_id = ?", parentID).
+		Order("created_at ASC"). // Replies ordered oldest first
 		Limit(limit).
 		Offset(offset).
 		Find(&comments).Error
@@ -80,6 +104,16 @@ func (r *CommentRepositoryImpl) CountByPostID(ctx context.Context, postID uint) 
 	err := database.DB.WithContext(ctx).
 		Model(&entity.Comment{}).
 		Where("post_id = ?", postID).
+		Count(&count).Error
+	return count, err
+}
+
+// CountRepliesByParentID counts replies to a specific comment
+func (r *CommentRepositoryImpl) CountRepliesByParentID(ctx context.Context, parentID uint) (int64, error) {
+	var count int64
+	err := database.DB.WithContext(ctx).
+		Model(&entity.Comment{}).
+		Where("parent_id = ?", parentID).
 		Count(&count).Error
 	return count, err
 }

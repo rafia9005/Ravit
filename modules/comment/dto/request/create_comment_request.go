@@ -2,5 +2,6 @@ package request
 
 // CreateCommentRequest represents the request to create a comment
 type CreateCommentRequest struct {
-	Content string `json:"content" validate:"required,min=1,max=500"`
+	Content  string `json:"content" validate:"required,min=1,max=500"`
+	ParentID *uint  `json:"parent_id,omitempty"` // Optional: set for replies
 }

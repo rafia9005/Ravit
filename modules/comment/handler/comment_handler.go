@@ -9,6 +9,7 @@ import (
 	"Ravit/modules/comment/domain/service"
 	"Ravit/modules/comment/dto/request"
 	"Ravit/modules/comment/dto/response"
+	userRepository "Ravit/modules/users/domain/repository"
 	"strconv"
 
 	"github.com/labstack/echo"
@@ -17,22 +18,37 @@ import (
 // CommentHandler handles HTTP requests for comments
 type CommentHandler struct {
 	commentService *service.CommentService
+	userRepo       userRepository.UserRepository
 	log            *logger.Logger
 	event          *bus.EventBus
 	r              *utils.Response
 }
 
 // NewCommentHandler creates a new comment handler
-func NewCommentHandler(log *logger.Logger, event *bus.EventBus, commentService *service.CommentService) *CommentHandler {
+func NewCommentHandler(log *logger.Logger, event *bus.EventBus, commentService *service.CommentService, userRepo userRepository.UserRepository) *CommentHandler {
 	return &CommentHandler{
 		commentService: commentService,
+		userRepo:       userRepo,
 		log:            log,
 		event:          event,
 		r:              &utils.Response{},
 	}
 }
 
-// GetCommentsByPost gets comments for a post
+// fetchUsersForComments extracts unique user IDs from a list of comments
+func (h *CommentHandler) fetchUsersForComments(comments []*entity.Comment) []uint {
+	userIDMap := make(map[uint]bool)
+	for _, comment := range comments {
+		userIDMap[comment.UserID] = true
+	}
+	userIDs := make([]uint, 0, len(userIDMap))
+	for id := range userIDMap {
+		userIDs = append(userIDs, id)
+	}
+	return userIDs
+}
+
+// GetCommentsByPost gets top-level comments for a post with reply counts
 func (h *CommentHandler) GetCommentsByPost(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -52,15 +68,69 @@ func (h *CommentHandler) GetCommentsByPost(c echo.Context) error {
 		offset = 0
 	}
 
-	comments, err := h.commentService.GetCommentsByPostID(ctx, uint(postID), limit, offset)
+	// Get top-level comments only (parent_id IS NULL)
+	comments, err := h.commentService.GetTopLevelCommentsByPostID(ctx, uint(postID), limit, offset)
 	if err != nil {
 		return h.r.InternalServerErrorResponse(c, "Failed to get comments")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntities(comments), "Comments retrieved successfully")
+	// Fetch users for comments
+	userIDs := h.fetchUsersForComments(comments)
+	users, err := h.userRepo.FindByIDs(ctx, userIDs)
+	if err != nil {
+		h.log.Error("Failed to fetch users for comments: %v", err)
+		return h.r.SuccessResponse(c, response.FromEntities(comments), "Comments retrieved successfully")
+	}
+
+	// Fetch reply counts for each comment
+	replyCounts := make(map[uint]int64)
+	for _, comment := range comments {
+		count, err := h.commentService.CountReplies(ctx, comment.ID)
+		if err == nil {
+			replyCounts[comment.ID] = count
+		}
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsersAndReplyCounts(comments, users, replyCounts), "Comments retrieved successfully")
 }
 
-// CreateComment creates a new comment
+// GetReplies gets replies for a specific comment
+func (h *CommentHandler) GetReplies(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	commentID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return h.r.BadRequestResponse(c, "Invalid comment ID")
+	}
+
+	// Parse pagination params
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	offset, _ := strconv.Atoi(c.QueryParam("offset"))
+
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	replies, err := h.commentService.GetRepliesByCommentID(ctx, uint(commentID), limit, offset)
+	if err != nil {
+		return h.r.InternalServerErrorResponse(c, "Failed to get replies")
+	}
+
+	// Fetch users for replies
+	userIDs := h.fetchUsersForComments(replies)
+	users, err := h.userRepo.FindByIDs(ctx, userIDs)
+	if err != nil {
+		h.log.Error("Failed to fetch users for replies: %v", err)
+		return h.r.SuccessResponse(c, response.FromEntities(replies), "Replies retrieved successfully")
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsers(replies, users), "Replies retrieved successfully")
+}
+
+// CreateComment creates a new comment or reply
 func (h *CommentHandler) CreateComment(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -84,18 +154,42 @@ func (h *CommentHandler) CreateComment(c echo.Context) error {
 		return h.r.BadRequestResponse(c, "Validation failed")
 	}
 
-	// Create comment entity
-	comment := entity.NewComment(userID, uint(postID), req.Content)
+	var comment *entity.Comment
 
-	err = h.commentService.CreateComment(ctx, comment)
-	if err != nil {
-		return h.r.InternalServerErrorResponse(c, "Failed to create comment")
+	// Check if this is a reply or a top-level comment
+	if req.ParentID != nil {
+		// Create a reply
+		comment, err = h.commentService.CreateReply(ctx, userID, uint(postID), *req.ParentID, req.Content)
+		if err != nil {
+			if err == service.ErrInvalidParent {
+				return h.r.BadRequestResponse(c, "Invalid parent comment")
+			}
+			return h.r.InternalServerErrorResponse(c, "Failed to create reply")
+		}
+		h.event.Publish(bus.Event{Type: "reply.created", Payload: comment})
+	} else {
+		// Create a top-level comment
+		comment = entity.NewComment(userID, uint(postID), req.Content)
+		err = h.commentService.CreateComment(ctx, comment)
+		if err != nil {
+			return h.r.InternalServerErrorResponse(c, "Failed to create comment")
+		}
+		h.event.Publish(bus.Event{Type: "comment.created", Payload: comment})
 	}
 
-	// Publish event
-	h.event.Publish(bus.Event{Type: "comment.created", Payload: comment})
+	// Fetch user info for response
+	user, _ := h.userRepo.FindByID(ctx, userID)
+	resp := response.FromEntity(comment)
+	if user != nil {
+		resp.User = &response.UserInfo{
+			ID:       user.ID,
+			Name:     user.Name,
+			Username: user.Username,
+			Avatar:   user.Avatar,
+		}
+	}
 
-	return h.r.CreatedResponse(c, response.FromEntity(comment), "Comment created successfully")
+	return h.r.CreatedResponse(c, resp, "Comment created successfully")
 }
 
 // UpdateComment updates a comment
@@ -183,6 +277,7 @@ func (h *CommentHandler) RegisterRoutes(e *echo.Echo, basePath string) {
 
 	commentGroup := e.Group(basePath + "/comments")
 	commentGroup.Use(middleware.Auth)
+	commentGroup.GET("/:id/replies", h.GetReplies)
 	commentGroup.PUT("/:id", h.UpdateComment)
 	commentGroup.DELETE("/:id", h.DeleteComment)
 }

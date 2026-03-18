@@ -45,11 +45,11 @@ export function useComments(postId: number) {
     }
   }, [postId]);
 
-  const updateComment = useCallback(async (commentId: number, input: CreateCommentInput) => {
+  const updateComment = useCallback(async (commentId: number, content: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await CommentService.updateComment(postId, commentId, input);
+      const response = await CommentService.updateComment(commentId, content);
       const updatedComment = response.data;
       setComments((prev) =>
         prev.map((comment) => (comment.id === commentId ? updatedComment : comment))
@@ -61,13 +61,13 @@ export function useComments(postId: number) {
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, []);
 
   const deleteComment = useCallback(async (commentId: number) => {
     setLoading(true);
     setError(null);
     try {
-      await CommentService.deleteComment(postId, commentId);
+      await CommentService.deleteComment(commentId);
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete comment");
@@ -75,7 +75,7 @@ export function useComments(postId: number) {
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, []);
 
   const clearError = useCallback(() => setError(null), []);
 

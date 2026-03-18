@@ -5,24 +5,28 @@ import type { Comment, User } from "@/types";
 
 interface CommentListProps {
   comments: Comment[];
+  postId: number;
   loading?: boolean;
   hasMore?: boolean;
   currentUserId?: number;
   onLoadMore?: () => void;
   onDelete?: (commentId: number) => void;
   onEdit?: (commentId: number, content: string) => void;
+  onReplyCreated?: (reply: Comment) => void;
   emptyMessage?: string;
   getUserForComment?: (comment: Comment) => User | undefined;
 }
 
 export function CommentList({
   comments,
+  postId,
   loading = false,
   hasMore = false,
   currentUserId,
   onLoadMore,
   onDelete,
   onEdit,
+  onReplyCreated,
   emptyMessage = "No comments yet",
   getUserForComment,
 }: CommentListProps) {
@@ -72,10 +76,12 @@ export function CommentList({
         <CommentCard
           key={comment.id}
           comment={comment}
+          postId={postId}
           currentUserId={currentUserId}
           user={getUserForComment?.(comment)}
           onDelete={onDelete}
           onEdit={onEdit}
+          onReplyCreated={onReplyCreated}
         />
       ))}
 

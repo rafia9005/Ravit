@@ -10,9 +10,12 @@ type CommentRepository interface {
 	FindAll(ctx context.Context, limit, offset int) ([]*entity.Comment, error)
 	FindByID(ctx context.Context, id uint) (*entity.Comment, error)
 	FindByPostID(ctx context.Context, postID uint, limit, offset int) ([]*entity.Comment, error)
+	FindTopLevelByPostID(ctx context.Context, postID uint, limit, offset int) ([]*entity.Comment, error)
+	FindRepliesByParentID(ctx context.Context, parentID uint, limit, offset int) ([]*entity.Comment, error)
 	FindByUserID(ctx context.Context, userID uint, limit, offset int) ([]*entity.Comment, error)
 	Create(ctx context.Context, comment *entity.Comment) error
 	Update(ctx context.Context, comment *entity.Comment) error
 	Delete(ctx context.Context, id uint) error
 	CountByPostID(ctx context.Context, postID uint) (int64, error)
+	CountRepliesByParentID(ctx context.Context, parentID uint) (int64, error)
 }
