@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { RightSidebar } from "@/components/layout/RightSidebar";
 import { PostList } from "@/components/posts";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { usePosts } from "@/hooks/usePosts";
@@ -47,45 +45,28 @@ export default function BookmarksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex justify-center selection:bg-primary/20">
-      <div className="flex w-full max-w-7xl">
-        {/* Left Sidebar */}
-        <aside className="w-16 lg:w-[275px] shrink-0">
-          <Sidebar />
-        </aside>
+    <div className="flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-10 p-4 border-b bg-background/80 backdrop-blur-md">
+        <h2 className="text-xl font-bold tracking-tight">Bookmarks</h2>
+        <p className="text-sm text-muted-foreground">@{user?.email?.split("@")[0]}</p>
+      </header>
 
-        {/* Main Content */}
-        <main className="flex-1 max-w-[600px] border-x min-h-screen">
-          <div className="flex flex-col">
-            {/* Header */}
-            <header className="sticky top-0 z-10 p-4 border-b bg-background/80 backdrop-blur-md">
-              <h2 className="text-xl font-bold tracking-tight">Bookmarks</h2>
-              <p className="text-sm text-muted-foreground">@{user?.email?.split("@")[0]}</p>
-            </header>
-
-            {/* Bookmarked Posts */}
-            <PostList
-              posts={posts}
-              loading={loading}
-              hasMore={hasMore}
-              currentUserId={user?.id}
-              onLoadMore={handleLoadMore}
-              onLike={likePost}
-              onUnlike={unlikePost}
-              onRemoveBookmark={handleRemoveBookmark}
-              onDelete={deletePost}
-              onReply={handleReply}
-              onRepost={handleRepost}
-              emptyMessage="You haven't bookmarked any posts yet"
-            />
-          </div>
-        </main>
-
-        {/* Right Sidebar */}
-        <aside className="hidden xl:block w-[350px] shrink-0">
-          <RightSidebar />
-        </aside>
-      </div>
+      {/* Bookmarked Posts */}
+      <PostList
+        posts={posts}
+        loading={loading}
+        hasMore={hasMore}
+        currentUserId={user?.id}
+        onLoadMore={handleLoadMore}
+        onLike={likePost}
+        onUnlike={unlikePost}
+        onRemoveBookmark={handleRemoveBookmark}
+        onDelete={deletePost}
+        onReply={handleReply}
+        onRepost={handleRepost}
+        emptyMessage="You haven't bookmarked any posts yet"
+      />
     </div>
   );
 }
