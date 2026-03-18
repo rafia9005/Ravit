@@ -4,6 +4,9 @@ import (
 	"Ravit/internal/pkg/bus"
 	"Ravit/internal/pkg/logger"
 	"Ravit/modules/explore/handler"
+	postRepository "Ravit/modules/post/domain/repository"
+	postService "Ravit/modules/post/domain/service"
+	userRepository "Ravit/modules/users/domain/repository"
 
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
@@ -30,8 +33,16 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 
 	m.logger.Info("Initializing explore module")
 
+	// Initialize user repository
+	userRepo := userRepository.NewUserRepositoryImpl()
+
+	// Initialize post repositories and service for like status
+	postRepo := postRepository.NewPostRepositoryImpl()
+	likeRepo := postRepository.NewLikeRepositoryImpl()
+	postSvc := postService.NewPostService(postRepo, likeRepo)
+
 	// Initialize handlers
-	m.exploreHandler = handler.NewExploreHandler(m.logger)
+	m.exploreHandler = handler.NewExploreHandler(m.logger, userRepo, postSvc)
 	m.logger.Debug("Explore handler initialized")
 
 	m.logger.Info("Explore module initialized successfully")

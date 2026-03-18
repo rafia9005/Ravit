@@ -10,6 +10,9 @@ import (
 	"Ravit/modules/post/domain/service"
 	"Ravit/modules/post/dto/request"
 	"Ravit/modules/post/dto/response"
+	userEntity "Ravit/modules/users/domain/entity"
+	userRepository "Ravit/modules/users/domain/repository"
+	"context"
 	"encoding/json"
 	"strconv"
 
@@ -19,6 +22,7 @@ import (
 // PostHandler handles HTTP requests for posts
 type PostHandler struct {
 	postService   *service.PostService
+	userRepo      userRepository.UserRepository
 	log           *logger.Logger
 	event         *bus.EventBus
 	r             *utils.Response
@@ -26,14 +30,36 @@ type PostHandler struct {
 }
 
 // NewPostHandler creates a new post handler
-func NewPostHandler(log *logger.Logger, event *bus.EventBus, postService *service.PostService, mediaUploader *media.MediaUploader) *PostHandler {
+func NewPostHandler(log *logger.Logger, event *bus.EventBus, postService *service.PostService, mediaUploader *media.MediaUploader, userRepo userRepository.UserRepository) *PostHandler {
 	return &PostHandler{
 		postService:   postService,
+		userRepo:      userRepo,
 		log:           log,
 		event:         event,
 		r:             &utils.Response{},
 		mediaUploader: mediaUploader,
 	}
+}
+
+// fetchUsersForPosts is a helper that fetches user info for a list of posts
+func (h *PostHandler) fetchUsersForPosts(ctx context.Context, posts []*entity.Post) []*userEntity.User {
+	// Collect unique user IDs from posts
+	userIDSet := make(map[uint]bool)
+	for _, post := range posts {
+		userIDSet[post.UserID] = true
+	}
+	userIDs := make([]uint, 0, len(userIDSet))
+	for id := range userIDSet {
+		userIDs = append(userIDs, id)
+	}
+
+	// Fetch users
+	users, err := h.userRepo.FindByIDs(ctx, userIDs)
+	if err != nil {
+		h.log.Error("Failed to fetch users for posts: %v", err)
+		return nil
+	}
+	return users
 }
 
 // GetFeed gets the feed for the authenticated user
@@ -62,7 +88,19 @@ func (h *PostHandler) GetFeed(c echo.Context) error {
 		return h.r.InternalServerErrorResponse(c, "Failed to get feed")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntities(posts), "Feed retrieved successfully")
+	// Fetch users
+	users := h.fetchUsersForPosts(ctx, posts)
+
+	// Get post IDs for status check
+	postIDs := make([]uint, len(posts))
+	for i, post := range posts {
+		postIDs[i] = post.ID
+	}
+
+	// Get like status for current user
+	likeStatus, _ := h.postService.GetLikeStatusForPosts(ctx, userID, postIDs)
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsersAndStatus(posts, users, likeStatus, nil), "Feed retrieved successfully")
 }
 
 // GetPost gets a post by ID
@@ -85,7 +123,19 @@ func (h *PostHandler) GetPost(c echo.Context) error {
 	// Increment view count
 	_ = h.postService.IncrementViewCount(ctx, uint(id))
 
-	return h.r.SuccessResponse(c, response.FromEntity(post), "Post retrieved successfully")
+	// Fetch user info for the post
+	resp := response.FromEntity(post)
+	user, err := h.userRepo.FindByID(ctx, post.UserID)
+	if err == nil && user != nil {
+		resp.User = &response.UserInfo{
+			ID:       user.ID,
+			Name:     user.Name,
+			Username: user.Username,
+			Avatar:   user.Avatar,
+		}
+	}
+
+	return h.r.SuccessResponse(c, resp, "Post retrieved successfully")
 }
 
 // CreatePost creates a new post
@@ -284,6 +334,9 @@ func (h *PostHandler) UnlikePost(c echo.Context) error {
 func (h *PostHandler) GetReplies(c echo.Context) error {
 	ctx := c.Request().Context()
 
+	// Get user ID from context (may be 0 if not authenticated)
+	userID, _ := c.Get("user_id").(uint)
+
 	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		return h.r.BadRequestResponse(c, "Invalid post ID")
@@ -305,7 +358,20 @@ func (h *PostHandler) GetReplies(c echo.Context) error {
 		return h.r.InternalServerErrorResponse(c, "Failed to get replies")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntities(replies), "Replies retrieved successfully")
+	// Fetch users and return replies with user info
+	users := h.fetchUsersForPosts(ctx, replies)
+
+	// Get like status for current user
+	var likeStatus map[uint]bool
+	if userID > 0 {
+		postIDs := make([]uint, len(replies))
+		for i, reply := range replies {
+			postIDs[i] = reply.ID
+		}
+		likeStatus, _ = h.postService.GetLikeStatusForPosts(ctx, userID, postIDs)
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsersAndStatus(replies, users, likeStatus, nil), "Replies retrieved successfully")
 }
 
 // UploadImages uploads images for a post
@@ -411,7 +477,23 @@ func (h *PostHandler) GetUserPosts(c echo.Context) error {
 		return h.r.InternalServerErrorResponse(c, "Failed to get user posts")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntities(posts), "User posts retrieved successfully")
+	// Fetch users
+	users := h.fetchUsersForPosts(ctx, posts)
+
+	// Get current user ID if authenticated (optional for like status)
+	currentUserID, _ := c.Get("user_id").(uint)
+
+	// Get like status if user is authenticated
+	var likeStatus map[uint]bool
+	if currentUserID > 0 && len(posts) > 0 {
+		postIDs := make([]uint, len(posts))
+		for i, post := range posts {
+			postIDs[i] = post.ID
+		}
+		likeStatus, _ = h.postService.GetLikeStatusForPosts(ctx, currentUserID, postIDs)
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsersAndStatus(posts, users, likeStatus, nil), "User posts retrieved successfully")
 }
 
 // GetUserLikes gets posts liked by a specific user
@@ -439,7 +521,24 @@ func (h *PostHandler) GetUserLikes(c echo.Context) error {
 		return h.r.InternalServerErrorResponse(c, "Failed to get user likes")
 	}
 
-	return h.r.SuccessResponse(c, response.FromEntities(posts), "User likes retrieved successfully")
+	// Fetch users
+	users := h.fetchUsersForPosts(ctx, posts)
+
+	// Get current user ID if authenticated (optional for like status)
+	currentUserID, _ := c.Get("user_id").(uint)
+
+	// Get like status if user is authenticated
+	// For liked posts, all should be marked as liked by default for the viewing user
+	var likeStatus map[uint]bool
+	if currentUserID > 0 && len(posts) > 0 {
+		postIDs := make([]uint, len(posts))
+		for i, post := range posts {
+			postIDs[i] = post.ID
+		}
+		likeStatus, _ = h.postService.GetLikeStatusForPosts(ctx, currentUserID, postIDs)
+	}
+
+	return h.r.SuccessResponse(c, response.FromEntitiesWithUsersAndStatus(posts, users, likeStatus, nil), "User likes retrieved successfully")
 }
 
 // RegisterRoutes registers the post routes

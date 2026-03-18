@@ -2,6 +2,7 @@ package response
 
 import (
 	"Ravit/modules/post/domain/entity"
+	userEntity "Ravit/modules/users/domain/entity"
 	"time"
 )
 
@@ -71,6 +72,60 @@ func FromEntities(posts []*entity.Post) []*PostResponse {
 	postResponses := make([]*PostResponse, len(posts))
 	for i, post := range posts {
 		postResponses[i] = FromEntity(post)
+	}
+	return postResponses
+}
+
+// FromEntitiesWithUsers converts a slice of post entities to responses with user info
+func FromEntitiesWithUsers(posts []*entity.Post, users []*userEntity.User) []*PostResponse {
+	// Create a map of user IDs to users for quick lookup
+	userMap := make(map[uint]*userEntity.User)
+	for _, user := range users {
+		userMap[user.ID] = user
+	}
+
+	postResponses := make([]*PostResponse, len(posts))
+	for i, post := range posts {
+		resp := FromEntity(post)
+		if user, ok := userMap[post.UserID]; ok {
+			resp.User = &UserInfo{
+				ID:       user.ID,
+				Name:     user.Name,
+				Username: user.Username,
+				Avatar:   user.Avatar,
+			}
+		}
+		postResponses[i] = resp
+	}
+	return postResponses
+}
+
+// FromEntitiesWithUsersAndStatus converts posts to responses with user info and like/bookmark status
+func FromEntitiesWithUsersAndStatus(posts []*entity.Post, users []*userEntity.User, likeStatus map[uint]bool, bookmarkStatus map[uint]bool) []*PostResponse {
+	// Create a map of user IDs to users for quick lookup
+	userMap := make(map[uint]*userEntity.User)
+	for _, user := range users {
+		userMap[user.ID] = user
+	}
+
+	postResponses := make([]*PostResponse, len(posts))
+	for i, post := range posts {
+		resp := FromEntity(post)
+		if user, ok := userMap[post.UserID]; ok {
+			resp.User = &UserInfo{
+				ID:       user.ID,
+				Name:     user.Name,
+				Username: user.Username,
+				Avatar:   user.Avatar,
+			}
+		}
+		if likeStatus != nil {
+			resp.IsLiked = likeStatus[post.ID]
+		}
+		if bookmarkStatus != nil {
+			resp.IsBookmarked = bookmarkStatus[post.ID]
+		}
+		postResponses[i] = resp
 	}
 	return postResponses
 }

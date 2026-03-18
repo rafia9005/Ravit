@@ -16,8 +16,12 @@ import Logout from "./pages/auth/logout"
 // Lazy load pages for better performance
 const ExplorePage = lazy(() => import("./pages/explore"))
 const NotificationsPage = lazy(() => import("./pages/notifications"))
+const MessagesPage = lazy(() => import("./pages/messages"))
 const BookmarksPage = lazy(() => import("./pages/bookmarks"))
+const SettingsPage = lazy(() => import("./pages/settings"))
+const EditProfilePage = lazy(() => import("./pages/settings/profile"))
 const ProfilePage = lazy(() => import("./pages/profile"))
+const FollowersPage = lazy(() => import("./pages/profile/followers"))
 const PostPage = lazy(() => import("./pages/post"))
 
 // Loading fallback component
@@ -46,9 +50,14 @@ createRoot(document.getElementById("root")!).render(
                   <Route path="" element={<Index />} />
                   <Route path="explore" element={<ExplorePage />} />
                   <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="messages" element={<MessagesPage />} />
                   <Route path="bookmarks" element={<BookmarksPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="settings/profile" element={<EditProfilePage />} />
                   <Route path="profile" element={<ProfilePage />} />
-                  <Route path="profile/:userId" element={<ProfilePage />} />
+                  <Route path="u/:username" element={<ProfilePage />} />
+                  <Route path="u/:username/followers" element={<FollowersPage />} />
+                  <Route path="u/:username/following" element={<FollowersPage />} />
                   <Route path="post/:postId" element={<PostPage />} />
                 </Route>
               </Routes>

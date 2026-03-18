@@ -8,6 +8,7 @@ import (
 	"Ravit/modules/post/domain/repository"
 	"Ravit/modules/post/domain/service"
 	"Ravit/modules/post/handler"
+	userRepository "Ravit/modules/users/domain/repository"
 
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
@@ -38,6 +39,7 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 	// Initialize repositories
 	postRepo := repository.NewPostRepositoryImpl()
 	likeRepo := repository.NewLikeRepositoryImpl()
+	userRepo := userRepository.NewUserRepositoryImpl()
 	m.logger.Debug("Post repositories initialized")
 
 	// Initialize services
@@ -49,7 +51,7 @@ func (m *Module) Initialize(db *gorm.DB, log *logger.Logger, event *bus.EventBus
 	m.logger.Debug("Media uploader initialized")
 
 	// Initialize handlers
-	m.postHandler = handler.NewPostHandler(m.logger, m.event, m.postService, mediaUploader)
+	m.postHandler = handler.NewPostHandler(m.logger, m.event, m.postService, mediaUploader, userRepo)
 	m.logger.Debug("Post handler initialized")
 
 	m.logger.Info("Post module initialized successfully")

@@ -25,10 +25,6 @@ export interface User {
   created_at: string;
   updated_at: string;
   // Extended profile fields (computed by backend or frontend)
-  display_name?: string;
-  avatar_url?: string;
-  location?: string;
-  website?: string;
   followers_count?: number;
   following_count?: number;
   is_following?: boolean;
@@ -70,14 +66,18 @@ export interface Comment {
   id: number;
   user_id: number;
   post_id: number;
+  parent_id?: number;
   content: string;
+  reply_count: number;
   created_at: string;
   updated_at: string;
   user?: User;
+  replies?: Comment[];
 }
 
 export interface CreateCommentInput {
   content: string;
+  parent_id?: number;
 }
 
 // Reply types (comment on comment)
@@ -138,4 +138,30 @@ export interface Like {
   user_id: number;
   post_id: number;
   created_at: string;
+}
+
+// Follow types
+export interface Follow {
+  id: number;
+  follower_id: number;
+  following_id: number;
+  created_at: string;
+}
+
+export interface UserFollow {
+  id: number;
+  user_id: number;
+  username: string;
+  name: string;
+  avatar: string;
+  created_at: string;
+}
+
+export interface FollowCounts {
+  followers_count: number;
+  following_count: number;
+}
+
+export interface IsFollowingResponse {
+  is_following: boolean;
 }

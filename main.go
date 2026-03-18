@@ -9,6 +9,7 @@ import (
 	"Ravit/modules/bookmarks"
 	"Ravit/modules/comment"
 	"Ravit/modules/explore"
+	"Ravit/modules/followers"
 	"Ravit/modules/notification"
 	"Ravit/modules/oauth"
 	"Ravit/modules/post"
@@ -59,6 +60,7 @@ func main() {
 	app.RegisterModule(explore.NewModule())
 	app.RegisterModule(notification.NewModule())
 	app.RegisterModule(bookmarks.NewModule())
+	app.RegisterModule(followers.NewModule())
 
 	// initialize the application
 	if err := app.Initialize(); err != nil {
