@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { LucideLoader2 } from "lucide-react";
+import { MainLayout } from "./layout/MainLayout";
 
 export const ProtectedRoute = () => {
   const { tokens, isLoading } = useAuth();
@@ -20,5 +21,9 @@ export const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <MainLayout>
+      <Outlet />
+    </MainLayout>
+  );
 };

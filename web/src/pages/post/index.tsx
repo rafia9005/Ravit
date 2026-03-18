@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { RightSidebar } from "@/components/layout/RightSidebar";
 import { PostCard } from "@/components/posts";
 import { CommentList, CommentComposer } from "@/components/comments";
 import { usePosts } from "@/hooks/usePosts";
@@ -127,105 +125,89 @@ export default function PostPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex justify-center selection:bg-primary/20">
-      <div className="flex w-full max-w-7xl">
-        {/* Left Sidebar */}
-        <aside className="w-16 lg:w-[275px] shrink-0">
-          <Sidebar />
-        </aside>
+    <div className="flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-10 p-4 border-b bg-background/80 backdrop-blur-md">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h2 className="text-xl font-bold tracking-tight">Post</h2>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <main className="flex-1 max-w-[600px] border-x min-h-screen">
-          <div className="flex flex-col">
-            {/* Header */}
-            <header className="sticky top-0 z-10 p-4 border-b bg-background/80 backdrop-blur-md">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <h2 className="text-xl font-bold tracking-tight">Post</h2>
-              </div>
-            </header>
+      {/* Loading State */}
+      {loading && (
+        <div className="p-8 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      )}
 
-            {/* Loading State */}
-            {loading && (
-              <div className="p-8 flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            )}
+      {/* Error State */}
+      {error && (
+        <div className="p-8 text-center text-destructive">
+          <p>{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 text-primary hover:underline"
+          >
+            Go back
+          </button>
+        </div>
+      )}
 
-            {/* Error State */}
-            {error && (
-              <div className="p-8 text-center text-destructive">
-                <p>{error}</p>
-                <button
-                  onClick={() => navigate(-1)}
-                  className="mt-4 text-primary hover:underline"
-                >
-                  Go back
-                </button>
-              </div>
-            )}
+      {/* Post Content */}
+      {post && !loading && (
+        <>
+          {/* Main Post */}
+          <PostCard
+            post={post}
+            currentUserId={user?.id}
+            onLike={handleLike}
+            onUnlike={handleUnlike}
+            onBookmark={handleBookmark}
+            onRemoveBookmark={handleRemoveBookmark}
+            onDelete={handleDelete}
+            onReply={handleReply}
+            onRepost={handleRepost}
+          />
 
-            {/* Post Content */}
-            {post && !loading && (
-              <>
-                {/* Main Post */}
-                <PostCard
-                  post={post}
-                  currentUserId={user?.id}
-                  onLike={handleLike}
-                  onUnlike={handleUnlike}
-                  onBookmark={handleBookmark}
-                  onRemoveBookmark={handleRemoveBookmark}
-                  onDelete={handleDelete}
-                  onReply={handleReply}
-                  onRepost={handleRepost}
-                />
-
-                {/* Comment Composer */}
-                <div id="comment-composer" className="border-b">
-                  <CommentComposer
-                    onSubmit={handleCommentCreated}
-                  />
-                </div>
-
-                {/* Comments Section */}
-                <div>
-                  <div className="p-4 border-b">
-                    <h3 className="font-semibold">
-                      Comments{" "}
-                      {post.reply_count ? (
-                        <span className="text-muted-foreground font-normal">
-                          ({post.reply_count})
-                        </span>
-                      ) : null}
-                    </h3>
-                  </div>
-
-                  <CommentList
-                    comments={comments}
-                    loading={commentsLoading}
-                    hasMore={hasMore}
-                    currentUserId={user?.id}
-                    onLoadMore={handleLoadMoreComments}
-                    onDelete={handleDeleteComment}
-                    emptyMessage="No comments yet. Be the first to comment!"
-                  />
-                </div>
-              </>
-            )}
+          {/* Comment Composer */}
+          <div id="comment-composer" className="border-b">
+            <CommentComposer
+              onSubmit={handleCommentCreated}
+            />
           </div>
-        </main>
 
-        {/* Right Sidebar */}
-        <aside className="hidden xl:block w-[350px] shrink-0">
-          <RightSidebar />
-        </aside>
-      </div>
+          {/* Comments Section */}
+          <div>
+            <div className="p-4 border-b">
+              <h3 className="font-semibold">
+                Comments{" "}
+                {post.reply_count ? (
+                  <span className="text-muted-foreground font-normal">
+                    ({post.reply_count})
+                  </span>
+                ) : null}
+              </h3>
+            </div>
+
+            <CommentList
+              comments={comments}
+              postId={numericPostId}
+              loading={commentsLoading}
+              hasMore={hasMore}
+              currentUserId={user?.id}
+              onLoadMore={handleLoadMoreComments}
+              onDelete={handleDeleteComment}
+              emptyMessage="No comments yet. Be the first to comment!"
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
